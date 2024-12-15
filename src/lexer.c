@@ -27,3 +27,7 @@ int is_symbol(char c) {
     // 1. Compare le caractère avec la liste des symboles possibles : (), {}, =, etc.
     // 2. Retourne 1 (true) si c’est un symbole valide, sinon 0 (false).
 }
+void skip_whitespace_and_comments(const char **current_char) {
+    // 1. Avance le pointeur tant que le caractère actuel est un espace ou une tabulation.
+    // 2. Si un commentaire est détecté (ex. "//"), avance jusqu’à la fin de la ligne.
+}
