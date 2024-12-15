@@ -1,3 +1,6 @@
+Le fichier "python test en temps réel" permet d'utiliser les commandes en temps réel (comme son nom l'indique) et le fichier "python le fichier officiel" c'est la liste des fonctions de manière plus statique
+
+
 Liste des Commandes Reconnaissables :
 
 
