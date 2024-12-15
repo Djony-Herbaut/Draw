@@ -40,11 +40,18 @@ typedef enum {
     TOKEN_ASSIGN,                  // =
 
     // Autres types
-    TOKEN_NBR,                  // 123, 3.14
-    TOKEN_STR,                  // "red"
-    TOKEN_VARIABLE,                // drawv_myVar - nom associés au mot clé drawv_
-    TOKEN_UNKNOWN,                 // Inconnus (erreurs de lexing)
+    TOKEN_NBR,                      // 123, 3.14
+    TOKEN_STR,                      // "red"
+    TOKEN_VARIABLE,                 // drawv_myVar - nom associés au mot clé drawv_
+    TOKEN_UNKNOWN,                  // Inconnus (erreurs de lexing)
 
     // Fin du fichier
     TOKEN_EOF                      // Fin de fichier
 } TokenType;
+
+typedef struct {
+    TokenType type;       // Le type de token (mot-clé, symbole, nombre, etc.)
+    char lexeme[100];     // Le texte exact du token (exemple : "drawcircle", "100")
+    int line;             // Le numéro de ligne où se trouve le token (utile pour les erreurs et l'option de débogage de notre IDE)
+    int col;              // La colonne dans la ligne où commence le token (utile pour les erreurs et l'option de débogage de notre IDE)
+} Token;
