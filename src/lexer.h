@@ -3,6 +3,7 @@
 
 #include "token.h"
 
+#define MAX_TOKENS 1000
 
 // Prototype de la fonction principale du lexer
 int tokenize(const char *source_code, Token *tokens);

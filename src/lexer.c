@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include "lexer.h"
 
-tokenize(const char *source_code, Token *tokens) {
+int tokenize(const char *source_code, Token *tokens) {
     // 1. Initialise un compteur pour suivre le nombre de tokens générés.
-    int cmpt =0;
+    int token_cmpt = 0 ;
+    const char *current_char = source_code;  
     // 2. Parcourt le code caractère par caractère (ou mot par mot).
     // 3. Détecte les espaces, tabulations, et commentaires pour les ignorer.
     // 4. Identifie les mots-clés, nombres, et symboles.

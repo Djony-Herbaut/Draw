@@ -34,7 +34,7 @@ update	               | Force la mise à jour de l'écran	                   | u
 
 Remarques :
 
-si on rajoute une commande ne pas oublier de la foutre dans le listenInstruction.
+si on rajoute une commande ne pas oublier de la mettre dans le listenInstruction.
 des erreures sont écrites dans la console si jamais y a un soucis (rudimentaire mais on a déjà ça au moins)
 les dessins se font instant donc la fct speed est inutile on devrait la retirer je pense 
 la fct tracer bah j'ai pas compris
