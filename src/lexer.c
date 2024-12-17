@@ -15,10 +15,16 @@ int tokenize(const char *source_code, Token *tokens) {
     // 5. Traite les erreurs lexicales (éléments inconnus).
     // 6. Renvoie le nombre total de tokens générés.
 }
-int is_keyword(const char *word) {
+TokenType is_keyword(const char *word) {
     // 1. Compare le mot avec la liste des mots-clés.
-    // 2. Si une correspondance est trouvée, retourne 1 (true).
-    // 3. Sinon, retourne 0 (false).
+    for(int i = 0 ; i < keywordsDictSize ; i++) {
+        if(word == keywords[i].name){
+            return keywords[i].type;
+        }
+    }
+    // 2. Si une correspondance est trouvée, retourne le token correspondant (true).
+    return TOKEN_UNKNOWN;
+    // 3. Sinon, retourne unknown(false).
 }
 int is_number(const char *word) {
     // 1. Vérifie que chaque caractère de la chaîne est un chiffre.
