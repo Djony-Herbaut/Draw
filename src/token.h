@@ -106,7 +106,7 @@ const int keywordsDictSize = sizeof(keywords) / sizeof(keywords[0]);
 
 // Liste de symboles
 
-TokenDictionnary symbol[] = {
+TokenDictionnary symbols[] = {
     {TOKEN_LPAREN,"("},
     {TOKEN_RPAREN,"("},
     {TOKEN_LBRACE,"{"},
@@ -120,4 +120,4 @@ TokenDictionnary symbol[] = {
     {TOKEN_MULT,"*"},
     {TOKEN_DIV,"/"}
 };
-const int symbolDictSize = sizeof(symbol) / sizeof(symbol[0]);
+const int symbolsDictSize = sizeof(symbols) / sizeof(symbols[0]);

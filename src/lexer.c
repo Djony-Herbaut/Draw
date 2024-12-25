@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "lexer.h"
 
 int tokenize(const char *source_code, Token *tokens) {
@@ -16,6 +17,10 @@ int tokenize(const char *source_code, Token *tokens) {
     // 6. Renvoie le nombre total de tokens générés.
 }
 TokenType is_keyword(const char *word) {
+    // Verification que le parametre ne soit pas vide
+    if (word == NULL || strlen(word) == 0) {
+        return TOKEN_UNKNOWN;
+    }
     // 1. Compare le mot avec la liste des mots-clés.
     for(int i = 0 ; i < keywordsDictSize ; i++) {
         if(word == keywords[i].name){
@@ -24,15 +29,37 @@ TokenType is_keyword(const char *word) {
     }
     // 2. Si une correspondance est trouvée, retourne le token correspondant (true).
     return TOKEN_UNKNOWN;
-    // 3. Sinon, retourne unknown(false).
+    // 3. Sinon, retourne unknown(pas de correspondance).
 }
-int is_number(const char *word) {
+TokenType is_number(const char *word) {
+    // Verification que le parametre ne soit pas vide
+    if (word == NULL || strlen(word) == 0) {
+        return TOKEN_UNKNOWN;
+    }
     // 1. Vérifie que chaque caractère de la chaîne est un chiffre.
-    // 2. Retourne 1 (true) si tous les caractères sont des chiffres, sinon 0 (false).
+    for(int i=0 ; i < strlen(word) ; i++){
+        if(!isdigit(word[i])){
+            return TOKEN_UNKNOWN;
+        }
+        // Si un caractère n'est pas un chiffre, retourne TOKEN_UNKNOWN
+    }
+    // 2. Si tous les caractères sont des chiffres, retourne TOKEN_NBR
+    return TOKEN_NBR;
 }
-int is_symbol(char c) {
+TokenType is_symbol(char c) {
+    // Verification que le parametre ne soit pas vide
+    if (c == NULL) {
+        return TOKEN_UNKNOWN;
+    }
     // 1. Compare le caractère avec la liste des symboles possibles : (), {}, =, etc.
-    // 2. Retourne 1 (true) si c’est un symbole valide, sinon 0 (false).
+    for(int i = 0 ; i < symbolsDictSize ; i++) {
+        if(c == symbols[i].name){
+            return symbols[i].type;
+        }
+    }
+    // 2. Si une correspondance est trouvée, retourne le token correspondant (true).
+    return TOKEN_UNKNOWN;
+    // 3. Sinon, retourne unknown(pas de correspondance).
 }
 void skip_whitespace_and_comments(const char **current_char) {
     // 1. Avance le pointeur tant que le caractère actuel est un espace ou une tabulation.
