@@ -1,30 +1,36 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h> // Pour isdigit, isalpha, isalnum
-#include "lexer.h"// Pour les définitions de Token, TokenType, etc.
-#include <string.h> // Pour strncpy, strcpy
+#include <ctype.h>
+#include <string.h>
+#include "lexer.h"
+
+// Déclarations des fonctions (Indispensable pour que le compilateur connaisse les signatures avant l'appel)
+void skip_whitespace_and_comments(const char **current_char);
+TokenType is_number(const char *word);
+TokenType is_keyword(const char *word);
+TokenType is_symbol(char c);
 
 int tokenize(const char *source_code, Token *tokens) {
-// Retourne le nombre de tokens générés, ou -1 en cas d'erreur.
-    int token_cmpt = 0;             
-    char *current_char = (char *)source_code; // Pointeur courant dans le code source (cast nécessaire car on va le modifier)
-    int line = 1;                   
-    int col = 1;                    
+    // Retourne le nombre de tokens générés, ou -1 en cas d'erreur.
+    int token_cmpt = 0;             // Compteur de tokens
+    const char *current_char = source_code; // Pointeur courant dans le code source (maintenant const car on ne modifie pas la source directement)
+    int line = 1;                   // Numéro de ligne courant
+    int col = 1;                    // Numéro de colonne courant
 
     // Boucle principale : parcourt le code source caractère par caractère
-    while (*current_char && token_cmpt < MAX_TOKENS) { 
-        skip_whitespace_and_comments(&current_char); 
+    while (*current_char && token_cmpt < MAX_TOKENS) {
+        skip_whitespace_and_comments(&current_char); // Ignore les espaces et les commentaires
 
-        if (*current_char == '\0') break; 
+        if (*current_char == '\0') break; // Fin de la chaîne source
 
         tokens[token_cmpt].line = line; // Enregistre le numéro de ligne du token
         tokens[token_cmpt].col = col;  // Enregistre le numéro de colonne du token
 
-        if (isdigit(*current_char)) {
-            char *start = current_char; // Marque le début du nombre
-            while (isdigit(*current_char)) { 
+        if (isdigit(*current_char)) { // Si le caractère courant est un chiffre
+            const char *start = current_char; // Marque le début du nombre
+            while (isdigit(*current_char)) { // Avance tant qu'on a des chiffres
                 current_char++;
-                col++; // Incremente la colonne
+                col++; // Incrémente la colonne
             }
             int len = current_char - start; // Calcule la longueur du nombre
             char *word = malloc((len + 1) * sizeof(char)); // Alloue de la mémoire pour stocker le nombre sous forme de chaîne
@@ -36,45 +42,40 @@ int tokenize(const char *source_code, Token *tokens) {
             word[len] = '\0';          // Ajoute le caractère nul de fin de chaîne
             tokens[token_cmpt].type = is_number(word); // Détermine le type de token (TOKEN_NBR)
             strcpy(tokens[token_cmpt].lexeme, word); // Copie le lexème dans le token
-            free(word);
+            free(word); // Libère la mémoire allouée
             if (tokens[token_cmpt].type == TOKEN_UNKNOWN) { // Gestion d'erreur si le nombre est invalide
                 fprintf(stderr, "Erreur lexicale : Nombre invalide ligne %d colonne %d\n", line, col);
                 return -1; // Retourne une erreur
             }
-            token_cmpt++; 
-
+            token_cmpt++;
         } else if (isalpha(*current_char) || *current_char == '_') { // Si le caractère courant est une lettre ou un underscore (pour les identifiants)
-            char *start = current_char; // Marque le début du mot
+            const char *start = current_char; // Marque le début du mot
             while (isalnum(*current_char) || *current_char == '_') { // Avance tant qu'on a des caractères alphanumériques ou des underscores
                 current_char++;
-                col++; // Incremente la colonne
+                col++; // Incrémente la colonne
             }
-            int len = current_char - start; 
-            char *word = malloc((len + 1) * sizeof(char)); 
+            int len = current_char - start;
+            char *word = malloc((len + 1) * sizeof(char));
             if (word == NULL) {
                 perror("Erreur d'allocation mémoire");
                 return -1;
             }
-            strncpy(word, start, len); 
-            word[len] = '\0';          // Ajoute le caractère nul de fin de chaîne
+            strncpy(word, start, len);
+            word[len] = '\0'; // Ajoute le caractère nul de fin de chaîne
             tokens[token_cmpt].type = is_keyword(word); // Vérifie si le mot est un mot-clé
             if (tokens[token_cmpt].type == TOKEN_UNKNOWN) { // Si ce n'est pas un mot clé, c'est une variable
                 tokens[token_cmpt].type = TOKEN_VARIABLE; // Assigne le type TOKEN_VARIABLE
-                strcpy(tokens[token_cmpt].lexeme, word); // Copie le lexème dans le token
-            } else {
-                strcpy(tokens[token_cmpt].lexeme, word); // Copie le lexème dans le token
             }
-            free(word); 
-            token_cmpt++; 
-
+            strcpy(tokens[token_cmpt].lexeme, word); // Copie le lexème dans le token
+            free(word); // Libère la mémoire allouée
+            token_cmpt++;
         } else if (is_symbol(*current_char) != TOKEN_UNKNOWN) { // Si le caractère courant est un symbole
             tokens[token_cmpt].type = is_symbol(*current_char); // Récupère le type du symbole
             tokens[token_cmpt].lexeme[0] = *current_char;     // Stocke le symbole dans le lexème
             tokens[token_cmpt].lexeme[1] = '\0';             // Ajoute le caractère nul de fin de chaîne
-            current_char++; 
-            col++; 
-            token_cmpt++; 
-
+            current_char++;
+            col++;
+            token_cmpt++;
         } else { // Si le caractère courant n'est ni un chiffre, ni une lettre, ni un symbole connu
             fprintf(stderr, "Erreur lexicale : Caractère inconnu '%c' ligne %d colonne %d\n", *current_char, line, col);
             return -1; // Retourne une erreur
@@ -85,7 +86,7 @@ int tokenize(const char *source_code, Token *tokens) {
         }
     }
 
-    tokens[token_cmpt].type = TOKEN_EOF;
+    tokens[token_cmpt].type = TOKEN_EOF; // Ajoute le token de fin de fichier
     strcpy(tokens[token_cmpt].lexeme, "EOF");
     tokens[token_cmpt].line = line;
     tokens[token_cmpt].col = col;
@@ -95,62 +96,96 @@ int tokenize(const char *source_code, Token *tokens) {
 }
 
 TokenType is_keyword(const char *word) {
-    // Verification que le parametre ne soit pas vide
     if (word == NULL || strlen(word) == 0) {
         return TOKEN_UNKNOWN;
     }
-    // 1. Compare le mot avec la liste des mots-clés.
-    for(int i = 0 ; i < keywordsDictSize ; i++) {
-        if(word == keywords[i].name){
+    for (int i = 0; i < keywordsDictSize; i++) {
+        if (strcmp(word, keywords[i].name) == 0) { // Utilisation de strcmp pour comparer les chaines
             return keywords[i].type;
         }
     }
-    // 2. Si une correspondance est trouvée, retourne le token correspondant (true).
     return TOKEN_UNKNOWN;
-    // 3. Sinon, retourne unknown(pas de correspondance).
 }
+
 TokenType is_number(const char *word) {
-    // Verification que le parametre ne soit pas vide
     if (word == NULL || strlen(word) == 0) {
         return TOKEN_UNKNOWN;
     }
-    // 1. Vérifie que chaque caractère de la chaîne est un chiffre.
-    for(int i=0 ; i < strlen(word) ; i++){
-        if(!isdigit(word[i])){
+    for (int i = 0; i < strlen(word); i++) {
+        if (!isdigit(word[i])) {
             return TOKEN_UNKNOWN;
         }
-        // Si un caractère n'est pas un chiffre, retourne TOKEN_UNKNOWN
     }
-    // 2. Si tous les caractères sont des chiffres, retourne TOKEN_NBR
     return TOKEN_NBR;
 }
+
 TokenType is_symbol(char c) {
-    // Verification que le parametre ne soit pas vide
-    if (c == NULL) {
+    if (c == '\0') {
         return TOKEN_UNKNOWN;
     }
-    // 1. Compare le caractère avec la liste des symboles possibles : (), {}, =, etc.
-    for(int i = 0 ; i < symbolsDictSize ; i++) {
-        if(c == symbols[i].name){
-            return symbols[i].type;// 2. Si une correspondance est trouvée, retourne le token correspondant (true).
+    for (int i = 0; i < symbolsDictSize; i++) {
+        if (c == symbols[i].name[0]) {
+            return symbols[i].type;
         }
     }
     return TOKEN_UNKNOWN;
-    // 3. Sinon, retourne unknown(pas de correspondance).
 }
+
 void skip_whitespace_and_comments(const char **current_char) {
-// 1. Avance le pointeur tant que le caractère actuel est un espace ou une tabulation.
- while (**current_char) {
+    while (**current_char) {
         if (**current_char == ' ' || **current_char == '\t' || **current_char == '\r') {
             (*current_char)++;
-// 2. Si un commentaire est détecté (ex. "//"), avance jusqu’à la fin de la ligne.
         } else if (**current_char == '/' && *(*current_char + 1) == '/') {
             while (**current_char && **current_char != '\n') {
                 (*current_char)++;
             }
-           if (**current_char == '\n') (*current_char)++; // Gestion du \n après un commentaire
+            if (**current_char == '\n') (*current_char)++; // Important pour passer à la ligne suivante après un commentaire
         } else {
-            break; // Important : on sort si on n'a ni espace, ni commentaire, ni \n
+            break;
         }
     }
+}
+int main() {
+    // Définir des cas de test
+    const char *test_codes[] = {
+        "",                                      // Code vide
+        "drawcircle 10 ( drawrect 20 )",        // Code simple
+        " drawcircle // ceci est un commentaire\n 10", // Avec commentaire et espaces
+        "drawv_maVariable = 5",                   // Avec une variable
+        "drawcircle 12345678901234567890", //Nombre très long
+        "drawcircle 10.5", //Nombre à virgule
+        "drawcircle 10a", //Nombre invalide
+        "drawcircle (", //Symbole sans opérande
+        "drawcircle )", //Symbole sans opérande
+        "drawcircle =", //Symbole sans opérande
+        "drawcircle >", //Symbole sans opérande
+        "drawcircle <", //Symbole sans opérande
+        "drawcircle +", //Symbole sans opérande
+        "drawcircle -", //Symbole sans opérande
+        "drawcircle *", //Symbole sans opérande
+        "drawcircle /", //Symbole sans opérande
+        "drawcircle ,", //Symbole sans opérande
+        "drawcreate_cursor drawsetpos drawgo drawsetx drawsety drawshowcursor drawhidecursor drawcursorcolor drawpensize drawmoveforward drawmovebackward drawpivotleft drawpivotright drawcircle drawdot drawarc drawupdate drawpenup drawpendown drawshape drawclearscreen drawv_variable drawf d_if d_else d_for d_while drawtsleep", //Test de tous les mots clés
+    };
+    int num_tests = sizeof(test_codes) / sizeof(test_codes[0]);
+
+    for (int i = 0; i < num_tests; i++) {
+        printf("\n--- Test %d ---\nCode source : \"%s\"\n", i + 1, test_codes[i]);
+
+        Token tokens[MAX_TOKENS];
+        int num_tokens = tokenize(test_codes[i], tokens);
+
+        if (num_tokens > 0) {
+            printf("Nombre de tokens : %d\n", num_tokens);
+            for (int j = 0; j < num_tokens; j++) {
+                printf("Token %d : Type = %d, Lexeme = \"%s\", Ligne = %d, Colonne = %d\n", j, tokens[j].type, tokens[j].lexeme, tokens[j].line, tokens[j].col);
+            }
+        } else if (num_tokens == -1) {
+            printf("Erreur lors de la tokenisation\n");
+        } else {
+            printf("Aucun token trouvé.\n");
+        }
+    }
+
+    return 0;
 }

@@ -108,7 +108,7 @@ const int keywordsDictSize = sizeof(keywords) / sizeof(keywords[0]);
 
 TokenDictionnary symbols[] = {
     {TOKEN_LPAREN,"("},
-    {TOKEN_RPAREN,"("},
+    {TOKEN_RPAREN,")"},
     {TOKEN_LBRACE,"{"},
     {TOKEN_RBRACE,"}"},
     {TOKEN_COMMA,","},
