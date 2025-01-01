@@ -44,6 +44,7 @@ typedef enum {
     TOKEN_MOINS,                   // -
     TOKEN_MULT,                    // *
     TOKEN_DIV,                     // /
+    TOKEN_MSG,                      // '
 
     // Autres types
     TOKEN_NBR,                      // 123, 3.14
@@ -118,6 +119,7 @@ TokenDictionnary symbols[] = {
     {TOKEN_PLUS,"+"},
     {TOKEN_MOINS,"-"},
     {TOKEN_MULT,"*"},
-    {TOKEN_DIV,"/"}
+    {TOKEN_DIV,"/"},
+    {TOKEN_MSG, "'" }
 };
 const int symbolsDictSize = sizeof(symbols) / sizeof(symbols[0]);

@@ -4,7 +4,7 @@
 #include <string.h>
 #include "lexer.h"
 
-// Déclarations des fonctions (Indispensable pour que le compilateur connaisse les signatures avant l'appel)
+// Déclarations des fonctions (Indispensable pour que le compilateur connaisse les signatures avant l'appel) peut-être à mettre dans lexer.h
 void skip_whitespace_and_comments(const char **current_char);
 TokenType is_number(const char *word);
 TokenType is_keyword(const char *word);
