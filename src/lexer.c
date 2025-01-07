@@ -144,7 +144,7 @@ void skip_whitespace_and_comments(const char **current_char) {
     }
 }
 
-int main() {
+/* int main() {
     // Définir des cas de test
     const char *test_codes[] = {
         "",                                      // Code vide
@@ -187,4 +187,4 @@ int main() {
     }
 
     return 0;
-}
+} */
