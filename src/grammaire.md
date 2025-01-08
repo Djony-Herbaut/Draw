@@ -8,17 +8,37 @@ S : axiome
 P : règles de production
 
 
-// Contient tout les tokens pouvant etre générés
+**Contient tout les tokens pouvant etre générés**
+
 T = { TOKEN_DRAWCREATE_CURSOR, TOKEN_DRAWSET_POS, TOKEN_DRAWGO,TOKEN_DRAWSETX, TOKEN_DRAWSETY, TOKEN_DRAWSHOW_CURSOR,TOKEN_DRAWHIDE_CURSOR, TOKEN_DRAWCURSOR_COLOR, TOKEN_DRAWPEN_SIZE,
 TOKEN_DRAWMOVE_FORWARD, TOKEN_DRAWMOVE_BACKWARD, TOKEN_DRAWPIVOT_LEFT,TOKEN_DRAWPIVOT_RIGHT, TOKEN_DRAWCIRCLE, TOKEN_DRAWDOT,TOKEN_DRAWARC, TOKEN_DRAWUPDATE, TOKEN_DRAWPENUP, TOKEN_DRAWPENDOWN,TOKEN_DRAWSHAPE, TOKEN_DRAWCLEAR_SCREEN,
 TOKEN_DRAWV_,TOKEN_DRAWF, TOKEN_D_IF, TOKEN_D_ELSE, TOKEN_D_FOR, TOKEN_D_WHILE,TOKEN_DRAWT_SLEEP, TOKEN_LPAREN, TOKEN_RPAREN, TOKEN_LBRACE,TOKEN_RBRACE, TOKEN_COMMA, TOKEN_ASSIGN, TOKEN_SUP, TOKEN_INF,TOKEN_PLUS, TOKEN_MOINS, TOKEN_MULT, TOKEN_DIV, TOKEN_MSG,TOKEN_NBR, TOKEN_STR, TOKEN_VARIABLE, TOKEN_EOF }
 
-
+**Elements non terminaux afin de generer les regles**
 N = { program, statement, block, statement_list, draw_stmt,setcolor_stmt, move_stmt, parameters, shape, condition,
 loop, condition_expr, comparison_operator, value }
 
+**axiome**
 S = program
 
+## Legende
+
+ε : Chaîne vide (epsilon)
+program : Programme principal.
+statement : Déclaration d'une action (dessiner, déplacer, définir une couleur).
+draw_stmt : Commande pour dessiner une forme.
+setcolor_stmt : Commande pour définir une couleur.
+move_stmt : Commande pour déplacer le curseur.
+parameters : Paramètres supplémentaires (dimensions, coordonnées).
+block : Groupe d'instructions encadré par des accolades {}.
+statement_list : Liste de déclarations ou instructions dans un bloc.
+condition : Structure de contrôle conditionnelle (if et else).
+loop : Structure de contrôle répétitive (while).
+condition_expr : Expression booléenne utilisée dans les conditions et les boucles.
+comparison_operator : Opérateurs de comparaison (ex. ==, !=, <, >).
+value : Peut être une constante numérique (number) ou une variable (variable).
+
+**regles de production**
 P =
   1. program → statement program | block program | ε
 
@@ -30,8 +50,8 @@ P =
 
   5. draw_stmt → TOKEN_DRAWCREATE_CURSOR parameters TOKEN_EOF
                 | TOKEN_DRAWGO TOKEN_EOF
-                | TOKEN_DRAWSETX TOKEN_ASSIGN value TOKEN_EOF
-                | TOKEN_DRAWSETY TOKEN_ASSIGN value TOKEN_EOF
+                | TOKEN_DRAWSETTOKEN_ASSIGN value TOKEN_EOF
+                | TOKEN_DRAWSETYX  TOKEN_ASSIGN value TOKEN_EOF
                 | TOKEN_DRAWMOVE_FORWARD TOKEN_EOF
                 | TOKEN_DRAWMOVE_BACKWARD TOKEN_EOF
                 | TOKEN_DRAWCIRCLE parameters TOKEN_EOF
@@ -54,7 +74,8 @@ P =
   12. condition_expr → TOKEN_VARIABLE comparison_operator value
                       | TOKEN_NBR comparison_operator TOKEN_NBR
 
-  13. comparison_operator → TOKEN_SUP | TOKEN_INF | TOKEN_ASSIGN            **symboles de comparaisons a revoir (pas d'inf egale, sup egale et faut prendre que c'est "==" pas "=")**
+  13. comparison_operator → TOKEN_SUP | TOKEN_SUP TOKEN_ASSIGN | TOKEN_INF | TOKEN_INF TOKEN_ASSIGN | TOKEN_ASSIGN TOKEN_ASSIGN 
 
   14. value → TOKEN_NBR | TOKEN_VARIABLE | TOKEN_STR
+
 
