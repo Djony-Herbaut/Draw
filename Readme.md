@@ -117,7 +117,7 @@ To compile and run the project, you need the following libraries and tools:
 
 3. Compile the project:
    ```bash
-    gcc -o ide ide.c `pkg-config --cflags --libs gtk+-3.0`
+    gcc -o ide ide.c lexer.c token.c `pkg-config --cflags --libs gtk+-3.0`
    ```
 
 4. Run the executable:

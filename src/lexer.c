@@ -3,12 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "lexer.h"
-
-// Déclarations des fonctions (Indispensable pour que le compilateur connaisse les signatures avant l'appel) peut-être à mettre dans lexer.h
-void skip_whitespace_and_comments(const char **current_char);
-TokenType is_number(const char *word);
-TokenType is_keyword(const char *word);
-TokenType is_symbol(char c);
+#include "ide.h"
 
 int tokenize(const char *source_code, Token *tokens) {
     // Retourne le nombre de tokens générés, ou -1 en cas d'erreur.
@@ -77,8 +72,11 @@ int tokenize(const char *source_code, Token *tokens) {
             col++;
             token_cmpt++;
         } else { // Si le caractère courant n'est ni un chiffre, ni une lettre, ni un symbole connu
-            fprintf(stderr, "Erreur lexicale : Caractère inconnu '%c' ligne %d colonne %d\n", *current_char, line, col);
-            return -1; // Retourne une erreur
+            char error_msg[256];
+            snprintf(error_msg, sizeof(error_msg), "Erreur lexicale : Caractère inconnu '%c' ligne %d colonne %d", 
+                     *current_char, line, col);
+            log_to_console(error_msg);  // Envoie l'erreur à la console/log
+            return -1; 
         }
         if (*current_char == '\n') { // Si on rencontre un retour à la ligne
             line++;             // Incrémente le numéro de ligne
@@ -145,7 +143,8 @@ void skip_whitespace_and_comments(const char **current_char) {
         }
     }
 }
-int main() {
+
+/* int main() {
     // Définir des cas de test
     const char *test_codes[] = {
         "",                                      // Code vide
@@ -169,7 +168,7 @@ int main() {
     };
     int num_tests = sizeof(test_codes) / sizeof(test_codes[0]);
 
-    for (int i = 0; i < num_tests; i++) {
+        for (int i = 0; i < num_tests; i++) {
         printf("\n--- Test %d ---\nCode source : \"%s\"\n", i + 1, test_codes[i]);
 
         Token tokens[MAX_TOKENS];
@@ -188,4 +187,4 @@ int main() {
     }
 
     return 0;
-}
+} */

@@ -1,4 +1,7 @@
 #include "ide.h"
+#include "lexer.h" 
+
+GtkWidget *console_log = NULL; // Global widget for console/log display
 
 // Callback for "New file" action
 void on_new_file(GtkWidget *widget, gpointer data) {
@@ -171,6 +174,11 @@ void setup_editor(GtkWidget *vbox, GtkWidget **textview, GtkTextBuffer **buffer)
     gtk_container_add(GTK_CONTAINER(frame), scroll);
 
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
+
+    init_syntax_highlighting(*buffer);
+
+    // Apply coloring every time the text changes
+    g_signal_connect(*buffer, "changed", G_CALLBACK(apply_syntax_highlighting), NULL);
 }
 
 // Function to set up the console/log area
@@ -184,6 +192,8 @@ void setup_console(GtkWidget *vbox, GtkWidget **console) {
     gtk_container_add(GTK_CONTAINER(frame), scroll);
 
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
+
+    console_log = *console;
 }
 
 // Function to set up the drawing area
@@ -196,10 +206,71 @@ void setup_drawing_area(GtkWidget *vbox, GtkWidget **drawing_area) {
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
 }
 
+// Apply syntax highlighting using the lexer functions
+void apply_syntax_highlighting(GtkTextBuffer *buffer) {
+    GtkTextIter start, end;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+
+    char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+    Token tokens[MAX_TOKENS];
+    int num_tokens = tokenize(text, tokens);
+
+    GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag *keyword_tag = gtk_text_tag_table_lookup(tag_table, "keyword");
+    GtkTextTag *symbol_tag = gtk_text_tag_table_lookup(tag_table, "symbol");
+
+    for (int i = 0; i < num_tokens; i++) {
+        GtkTextIter token_start, token_end;
+        gtk_text_buffer_get_iter_at_line_offset(buffer, &token_start, tokens[i].line - 1, tokens[i].col - 1);
+        gtk_text_buffer_get_iter_at_line_offset(buffer, &token_end, tokens[i].line - 1, tokens[i].col + strlen(tokens[i].lexeme) - 1);
+
+        // Use is_keyword and is_symbol to detect the nature of the token
+        if (is_keyword(tokens[i].lexeme) != TOKEN_UNKNOWN) {
+            gtk_text_buffer_apply_tag(buffer, keyword_tag, &token_start, &token_end);
+        } else if (is_symbol(tokens[i].lexeme[0]) != TOKEN_UNKNOWN) {
+            gtk_text_buffer_apply_tag(buffer, symbol_tag, &token_start, &token_end);
+        }
+    }
+    g_free(text);
+}
+
+// Initialization of tags for syntax highlighting
+void init_syntax_highlighting(GtkTextBuffer *buffer) {
+    GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(buffer);
+
+    GtkTextTag *keyword_tag = gtk_text_tag_new("keyword");
+    g_object_set(keyword_tag, "foreground", "blue", NULL);
+    gtk_text_tag_table_add(tag_table, keyword_tag);
+
+    GtkTextTag *symbol_tag = gtk_text_tag_new("symbol");
+    g_object_set(symbol_tag, "foreground", "green", NULL);
+    gtk_text_tag_table_add(tag_table, symbol_tag);
+}
+
+// Function to add errors to the console/log
+void log_to_console(const char *message) {
+    if (console_log != NULL) {
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(console_log));
+        GtkTextIter end;
+        gtk_text_buffer_get_end_iter(buffer, &end);
+
+        // Validate that the message is in UTF-8 before insertion
+        if (g_utf8_validate(message, -1, NULL)) {
+            gtk_text_buffer_insert(buffer, &end, message, -1);
+            gtk_text_buffer_insert(buffer, &end, "\n", -1);
+        } else {
+            // If the string is not valid, log a generic error
+            gtk_text_buffer_insert(buffer, &end, "[Erreur UTF-8 détectée]\n", -1);
+        }
+    }
+}
+
 // Main entry point of the program
 int main(int argc, char *argv[]) {
     GtkWidget *window;
     GtkWidget *vbox;
+    GtkWidget *console_log = NULL;
     GtkWidget *textview, *drawing_area, *console;
     GtkTextBuffer *buffer = NULL; // Buffer for the text editor
     GtkWidget *menubar;
