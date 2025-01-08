@@ -23,7 +23,6 @@ S = program
 
 ## Legende
 
-ε : Chaîne vide (epsilon)
 program : Programme principal.
 statement : Déclaration d'une action (dessiner, déplacer, définir une couleur).
 draw_stmt : Commande pour dessiner une forme.
@@ -40,7 +39,7 @@ value : Peut être une constante numérique (number) ou une variable (variable).
 
 **regles de production**
 P =
-  1. program → statement program | block program | ε
+  1. program → statement program | block program | TOKEN_EOF
 
   2. statement → draw_stmt | setcolor_stmt | move_stmt | condition | loop
 
