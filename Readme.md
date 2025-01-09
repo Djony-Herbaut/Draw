@@ -135,3 +135,14 @@ To compile and run the project, you need the following libraries and tools:
 - **Drawing Area**: Visualize graphical content.
 
 ---
+
+## READ_TOKENS
+
+Le fichier "read_tokens.c" permet de récupérer dans un fichier texte les tokens des fonctions écrites par l'utilisateur dans l'IDE ainsi que ses paramètres. Ce fichier texte se trouve ici : /output/tokens.txt
+
+1. Compiler le fichier 
+   gcc -o read_tokens read_tokens.c -I/usr/include/python3.12 -lpython3.12
+
+2. Le lancer
+   ./read_tokens
+
