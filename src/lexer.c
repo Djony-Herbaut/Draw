@@ -14,7 +14,7 @@ int tokenize(const char *source_code, Token *tokens) {
 
     // Boucle principale : parcourt le code source caractère par caractère
     while (*current_char && token_cmpt < MAX_TOKENS) {
-        skip_whitespace_and_comments(&current_char); // Ignore les espaces et les commentaires
+        skip_whitespace_and_comments(&current_char, &col); // Ignore les espaces et les commentaires
 
         if (*current_char == '\0') break; // Fin de la chaîne source
 
@@ -129,15 +129,23 @@ TokenType is_symbol(char c) {
     return TOKEN_UNKNOWN;
 }
 
-void skip_whitespace_and_comments(const char **current_char) {
+void skip_whitespace_and_comments(const char **current_char, int *col) {
     while (**current_char) {
-        if (**current_char == ' ' || **current_char == '\t' || **current_char == '\r') {
+        if (**current_char == ' ') {
             (*current_char)++;
+            (*col)++; 
+        } else if (**current_char == '\t') {
+            (*current_char)++;
+            (*col) += 4;  // Supposons que la tabulation vaut 4 colonnes (ajustable)
+        } else if (**current_char == '\r') {
+            (*current_char)++;
+            (*col)++;
         } else if (**current_char == '/' && *(*current_char + 1) == '/') {
             while (**current_char && **current_char != '\n') {
                 (*current_char)++;
             }
-            if (**current_char == '\n') (*current_char)++; // Important pour passer à la ligne suivante après un commentaire
+            if (**current_char == '\n') (*current_char)++;
+            (*col) = 1;  // Réinitialisation à la colonne 1 après un commentaire
         } else {
             break;
         }
