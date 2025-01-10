@@ -1,16 +1,26 @@
-#ifndef READ_TOKENS_H
-#define READ_TOKENS_H
+#ifndef READ_TOKEN_H
+#define READ_TOKEN_H
 
-#include "token.h"
+#include "token.h" // Inclusion du fichier contenant la définition des tokens
 
-// Taille maximale d'une ligne dans le fichier de tokens
 #define MAX_LINE_LENGTH 256
 
-/**
- * @brief Lit un fichier contenant des tokens et affiche leurs informations.
- * 
- * @param filename Le chemin vers le fichier contenant les tokens.
- */
-void read_tokens_file(const char *filename);
+// Fonction pour initialiser un canvas avec Tkinter
+void initialize_canvas();
 
-#endif // READ_TOKENS_H
+// Fonction pour mettre à jour la position du curseur
+void update_cursor_position(int x, int y);
+
+// Fonction pour exécuter une commande Python sur le canvas
+void execute_canvas_command(const char *command);
+
+// Fonction pour exécuter un token
+void execute_token(Token token, const char *params);
+
+// Fonction pour identifier les tokens à partir d'une chaîne
+Token identify_token(const char *token_str);
+
+// Fonction principale pour lire et analyser le fichier
+void parse_file(const char *filename);
+
+#endif // READ_TOKEN_H
