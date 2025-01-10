@@ -69,6 +69,35 @@ void execute_canvas_command(const char *command) {
     }
 }
 
+
+TokenType identify_token(const char *token_str) {
+    if (strcmp(token_str, "DRAWCREATE_CURSOR") == 0)       return TOKEN_DRAWCREATE_CURSOR;
+    if (strcmp(token_str, "DRAWSET_POS") == 0)            return TOKEN_DRAWSET_POS;
+    if (strcmp(token_str, "DRAWGO") == 0)                 return TOKEN_DRAWGO;
+    if (strcmp(token_str, "DRAWSETX") == 0)               return TOKEN_DRAWSETX;
+    if (strcmp(token_str, "DRAWSETY") == 0)               return TOKEN_DRAWSETY;
+    if (strcmp(token_str, "DRAWSHOW_CURSOR") == 0)        return TOKEN_DRAWSHOW_CURSOR;
+    if (strcmp(token_str, "DRAWHIDE_CURSOR") == 0)        return TOKEN_DRAWHIDE_CURSOR;
+    if (strcmp(token_str, "DRAWCURSOR_COLOR") == 0)       return TOKEN_DRAWCURSOR_COLOR;
+    if (strcmp(token_str, "DRAWPEN_SIZE") == 0)           return TOKEN_DRAWPEN_SIZE;
+    if (strcmp(token_str, "DRAWMOVE_FORWARD") == 0)       return TOKEN_DRAWMOVE_FORWARD;
+    if (strcmp(token_str, "DRAWMOVE_BACKWARD") == 0)      return TOKEN_DRAWMOVE_BACKWARD;
+    if (strcmp(token_str, "DRAWPIVOT_LEFT") == 0)         return TOKEN_DRAWPIVOT_LEFT;
+    if (strcmp(token_str, "DRAWPIVOT_RIGHT") == 0)        return TOKEN_DRAWPIVOT_RIGHT;
+    if (strcmp(token_str, "DRAWCIRCLE") == 0)             return TOKEN_DRAWCIRCLE;
+    if (strcmp(token_str, "DRAWDOT") == 0)                return TOKEN_DRAWDOT;
+    if (strcmp(token_str, "DRAWARC") == 0)                return TOKEN_DRAWARC;
+    if (strcmp(token_str, "DRAWUPDATE") == 0)             return TOKEN_DRAWUPDATE;
+    if (strcmp(token_str, "DRAWPENUP") == 0)              return TOKEN_DRAWPENUP;
+    if (strcmp(token_str, "DRAWPENDOWN") == 0)            return TOKEN_DRAWPENDOWN;
+    if (strcmp(token_str, "DRAWSHAPE") == 0)              return TOKEN_DRAWSHAPE;
+    if (strcmp(token_str, "DRAWCLEAR_SCREEN") == 0)       return TOKEN_DRAWCLEAR_SCREEN;
+    if (strcmp(token_str, ",") == 0)                      return TOKEN_COMMA;
+    if (strcmp(token_str, ";") == 0)                      return TOKEN_SEMICOLON;
+    if (strcmp(token_str, "EOF") == 0)                    return TOKEN_EOF;
+    return -1; // Token inconnu
+}
+
 // Fonction pour exécuter un token
 void execute_token(TokenType token, const char *params) {
     char command[256];
@@ -227,7 +256,7 @@ int main() {
     printf("Initialisation du canvas avec Tkinter...\n");
     initialize_canvas();
 
-    const char *filename = "../tokens.txt";
+    const char *filename = "../output/tokens.txt";
     parse_file(filename);
 
     printf("Lancement de la boucle Tkinter...\n");
