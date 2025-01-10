@@ -70,7 +70,7 @@ void execute_canvas_command(const char *command) {
 }
 
 // Fonction pour exécuter un token
-void execute_token(Token token, const char *params) {
+void execute_token(TokenType token, const char *params) {
     char command[256];
     switch (token) {
         case TOKEN_DRAWCREATE_CURSOR: {
