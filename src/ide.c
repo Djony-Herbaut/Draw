@@ -1,5 +1,8 @@
 #include "ide.h"
 #include "lexer.h" 
+#include "read_tokens.h"
+#include <cairo.h>
+#include <pthread.h>
 
 GtkWidget *console_log = NULL; // Global widget for console/log display
 
@@ -196,14 +199,16 @@ void setup_console(GtkWidget *vbox, GtkWidget **console) {
     console_log = *console;
 }
 
-// Function to set up the drawing area
-void setup_drawing_area(GtkWidget *vbox, GtkWidget **drawing_area) {
-    *drawing_area = gtk_drawing_area_new();
-    gtk_widget_set_size_request(*drawing_area, 400, 300);
-    GtkWidget *frame = gtk_frame_new("Zone Graphique");
+void *run_tk_canvas(void *arg) {
+    printf("Initialisation du canvas avec Tkinter...\n");
+    initialize_canvas();
 
-    gtk_container_add(GTK_CONTAINER(frame), *drawing_area);
-    gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
+    const char *filename = "../output/tokens.txt";
+    read_file(filename);
+
+    printf("Lancement de la boucle Tkinter...\n");
+    execute_canvas_command("root.mainloop()");
+    return NULL;
 }
 
 // Apply syntax highlighting using the lexer functions
@@ -271,7 +276,7 @@ int main(int argc, char *argv[]) {
     GtkWidget *window;
     GtkWidget *vbox;
     GtkWidget *console_log = NULL;
-    GtkWidget *textview, *drawing_area, *console;
+    GtkWidget *textview, *console;
     GtkTextBuffer *buffer = NULL; // Buffer for the text editor
     GtkWidget *menubar;
 
@@ -302,13 +307,20 @@ int main(int argc, char *argv[]) {
     // 4. Set up the console/log area
     setup_console(vbox, &console);
 
-    // 5. Set up the drawing area
-    setup_drawing_area(vbox, &drawing_area);
+    // Lancer le canvas dans un thread séparé
+    pthread_t tk_thread;
+    if (pthread_create(&tk_thread, NULL, run_tk_canvas, NULL) != 0) {
+        fprintf(stderr, "Erreur : Impossible de créer le thread pour Tkinter.\n");
+        return 1;
+    }
 
     // Show the window and all child widgets
     g_printerr("Debug: Window displayed.\n");
     gtk_widget_show_all(window);
 
     gtk_main();
+
+    pthread_join(tk_thread, NULL);
+    
     return 0;
 }

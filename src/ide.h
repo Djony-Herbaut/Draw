@@ -15,7 +15,6 @@ void connect_menu_signals(GtkWidget *menubar, GtkTextBuffer *buffer);
 // Setup functions for components
 void setup_editor(GtkWidget *vbox, GtkWidget **textview, GtkTextBuffer **buffer);
 void setup_console(GtkWidget *vbox, GtkWidget **console);
-void setup_drawing_area(GtkWidget *vbox, GtkWidget **drawing_area);
 
 void apply_syntax_highlighting(GtkTextBuffer *buffer);
 void init_syntax_highlighting(GtkTextBuffer *buffer);

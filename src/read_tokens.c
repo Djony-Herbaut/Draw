@@ -26,7 +26,7 @@ void initialize_canvas() {
         "import tkinter as tk\n"
         "global root, canvas\n"
         "root = tk.Tk()\n"
-        "root.title('Canvas Example')\n"
+        "root.title('Canvas')\n"
         "canvas = tk.Canvas(root, width=1280, height=720, bg='white')\n"
         "canvas.pack()\n";
 
@@ -201,8 +201,8 @@ void execute_token(TokenType token, const char *params) {
             break;
         }
         case TOKEN_DRAWARC: {
-            int radius;
-            sscanf(params, "%d %d", &radius);
+            int radius, second_value;
+            sscanf(params, "%d %d", &radius, &second_value);
             snprintf(command, sizeof(command),
                      "canvas.create_arc(%d-%d, %d-%d, %d+%d, %d+%d, outline='%s', width=%d)",
                      cursor_x, radius, cursor_y, radius, cursor_x, radius, cursor_y, radius,
@@ -277,7 +277,7 @@ void read_file(const char *filename) {
     fclose(file);
 }
 
-int main() {
+/* int main() {
     printf("Initialisation du canvas avec Tkinter...\n");
     initialize_canvas();
 
@@ -291,4 +291,4 @@ int main() {
     
     Py_Finalize();
     return 0;
-}
+} */
