@@ -21,6 +21,6 @@ void execute_token(Token token, const char *params);
 Token identify_token(const char *token_str);
 
 // Fonction principale pour lire et analyser le fichier
-void parse_file(const char *filename);
+void read_file(const char *filename);
 
 #endif // READ_TOKEN_H

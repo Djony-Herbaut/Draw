@@ -113,6 +113,7 @@ void execute_token(TokenType token, const char *params) {
             printf("Position du curseur mise à jour : (%d, %d)\n", cursor_x, cursor_y);
             break;
         }
+        // A MODIFIER (tracer le trait si pendown)
         case TOKEN_DRAWGO: {
             int x, y;
             sscanf(params, "%d %d", &x, &y);
@@ -134,16 +135,16 @@ void execute_token(TokenType token, const char *params) {
             printf("Position Y du curseur mise à jour : %d\n", cursor_y);
             break;
         }
-        //INUTILE 
-        case TOKEN_DRAWSHOW_CURSOR: {
-            printf("TOKEN_DRAWSHOW_CURSOR : Non implémenté (params: %s)\n", params);
-            break;
-        }
-        //INUTILE 
-        case TOKEN_DRAWHIDE_CURSOR: {
-            printf("TOKEN_DRAWHIDE_CURSOR : Non implémenté (params: %s)\n", params);
-            break;
-        }
+        // A IMPLEMENTER SI PASSAGE A TURTLE 
+        // case TOKEN_DRAWSHOW_CURSOR: {
+        //     printf("TOKEN_DRAWSHOW_CURSOR : Non implémenté (params: %s)\n", params);
+        //     break;
+        // }
+        //
+        // case TOKEN_DRAWHIDE_CURSOR: {
+        //     printf("TOKEN_DRAWHIDE_CURSOR : Non implémenté (params: %s)\n", params);
+        //     break;
+        // }
         case TOKEN_DRAWCURSOR_COLOR: {
             strncpy(cursor_color, params, sizeof(cursor_color) - 1);
             cursor_color[sizeof(cursor_color) - 1] = '\0';
@@ -169,12 +170,12 @@ void execute_token(TokenType token, const char *params) {
             printf("Déplacement vers l'arrière : nouvelle position (%d, %d)\n", cursor_x, cursor_y);
             break;
         }
-        //INUTILE 
+        // IMPLÉMENTER CA POUR LES DIAGONALES
         case TOKEN_DRAWPIVOT_LEFT: {
             printf("TOKEN_DRAWPIVOT_LEFT : Non implémenté (params: %s)\n", params);
             break;
         }
-        //INUTILE 
+        
         case TOKEN_DRAWPIVOT_RIGHT: {
             printf("TOKEN_DRAWPIVOT_RIGHT : Non implémenté (params: %s)\n", params);
             break;
@@ -210,25 +211,26 @@ void execute_token(TokenType token, const char *params) {
             break;
         }
         //INUTILE 
-        case TOKEN_DRAWUPDATE: {
-            printf("TOKEN_DRAWUPDATE : Non implémenté (params: %s)\n", params);
-            break;
-        }
-        //BIZARRE
+        // case TOKEN_DRAWUPDATE: {
+        //     printf("TOKEN_DRAWUPDATE : Non implémenté (params: %s)\n", params);
+        //     break;
+        // }
+
+        // A implémenter
         case TOKEN_DRAWPENUP: {
             printf("TOKEN_DRAWPENUP : Non implémenté (params: %s)\n", params);
             break;
         }
-        //BIZARRE
+        
         case TOKEN_DRAWPENDOWN: {
             printf("TOKEN_DRAWPENDOWN : Non implémenté (params: %s)\n", params);
             break;
         }
-        //QUESTION
-        case TOKEN_DRAWSHAPE: {
-            printf("TOKEN_DRAWSHAPE : Non implémenté (params: %s)\n", params);
-            break;
-        }
+        // A FAIRE QUE SI EN TURLE
+        // case TOKEN_DRAWSHAPE: {
+        //     printf("TOKEN_DRAWSHAPE : Non implémenté (params: %s)\n", params);
+        //     break;
+        // }
         case TOKEN_DRAWCLEAR_SCREEN: {
             snprintf(command, sizeof(command), "canvas.delete('all')");
             execute_canvas_command(command);
@@ -250,7 +252,7 @@ void execute_token(TokenType token, const char *params) {
 
 
 // Fonction principale pour lire et analyser le fichier
-void parse_file(const char *filename) {
+void read_file(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Erreur lors de l'ouverture du fichier");
@@ -280,7 +282,7 @@ int main() {
 
     //RECUPERE LE FICHIER ET EFFECTUE LE TRAITEMENT
     const char *filename = "../output/tokens.txt";
-    parse_file(filename);
+    read_file(filename);
 
 
     printf("Lancement de la boucle Tkinter...\n");
