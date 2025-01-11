@@ -128,6 +128,7 @@ void execute_token(TokenType token, const char *params) {
             printf("Position X du curseur mise à jour : %d\n", cursor_x);
             break;
         }
+        
         case TOKEN_DRAWSETY: {
             int y;
             sscanf(params, "%d", &y);
