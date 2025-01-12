@@ -1,4 +1,4 @@
-#include <python3.12/Python.h>
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,96 +6,106 @@
 
 #define MAX_LINE_LENGTH 256
 
-// Variables globales pour gérer l'état du curseur
-int cursor_x = 640; // Position initiale du curseur (centre du canvas)
-int cursor_y = 360;
-char cursor_color[20] = "black"; // Couleur initiale
-int pen_size = 1; // Taille initiale du stylo
-
 // Gestion du contexte Python
-PyObject *canvas = NULL;
-PyObject *root = NULL;
+PyObject *main_module = NULL;
 
-// Fonction pour initialiser un canvas avec Tkinter
-void initialize_canvas() {
+// Fonction pour initialiser Turtle
+void initialize_turtle() {
     // Initialiser l'interpréteur Python
     Py_Initialize();
 
-    // Script Python pour créer une fenêtre Tkinter avec un canvas
+    // Script Python pour initialiser Turtle
     const char *python_script =
-        "import tkinter as tk\n"
-        "global root, canvas\n"
-        "root = tk.Tk()\n"
-        "root.title('Canvas')\n"
-        "canvas = tk.Canvas(root, width=1280, height=720, bg='white')\n"
-        "canvas.pack()\n";
+        "import turtle\n"
+        "from turtle import *\n"
+        "screen = turtle.Screen()\n"
+        "screen.setup(width=1280, height=720)\n"
+        "pen = turtle.Turtle()\n"
+        "pen.speed(0)\n";
 
     // Exécuter le script Python
     int result = PyRun_SimpleString(python_script);
     if (result != 0) {
-        fprintf(stderr, "Erreur : Échec de l'exécution du script Python.\n");
+        fprintf(stderr, "Erreur : Échec de l'exécution du script Python pour Turtle.\n");
         Py_Finalize();
         exit(EXIT_FAILURE);
     }
 
-    // Obtenir les objets Python pour canvas et root
-    PyObject *main_module = PyImport_AddModule("__main__");
-    if (main_module) {
-        PyObject *main_dict = PyModule_GetDict(main_module);
-        canvas = PyDict_GetItemString(main_dict, "canvas");
-        root = PyDict_GetItemString(main_dict, "root");
-
-        if (!canvas || !root) {
-            fprintf(stderr, "Erreur : Impossible de récupérer les objets Tkinter.\n");
-            Py_Finalize();
-            exit(EXIT_FAILURE);
-        }
-        Py_INCREF(canvas);
-        Py_INCREF(root);
+    // Obtenir le contexte global Python
+    main_module = PyImport_AddModule("__main__");
+    if (!main_module) {
+        fprintf(stderr, "Erreur : Impossible de récupérer le module principal Python.\n");
+        Py_Finalize();
+        exit(EXIT_FAILURE);
     }
 }
 
-// Fonction pour mettre à jour la position du curseur
-void update_cursor_position(int x, int y) {
-    cursor_x = x;
-    cursor_y = y;
-}
 
-// Fonction pour exécuter une commande Python sur le canvas
-void execute_canvas_command(const char *command) {
-    int result = PyRun_SimpleString(command);
-    if (result != 0) {
-        fprintf(stderr, "Erreur : Échec de l'exécution de la commande Python.\n");
-    }
-}
+
 
 // Fonction pour identifier un token, retourn -1 en cas d'échec
+
 TokenType identify_token(const char *token_str) {
+
     if (strcmp(token_str, "TOKEN_DRAWCREATE_CURSOR") == 0)      return TOKEN_DRAWCREATE_CURSOR;
+
     if (strcmp(token_str, "TOKEN_DRAWSET_POS") == 0)            return TOKEN_DRAWSET_POS;
+
     if (strcmp(token_str, "TOKEN_DRAWGO") == 0)                 return TOKEN_DRAWGO;
+
     if (strcmp(token_str, "TOKEN_DRAWSETX") == 0)               return TOKEN_DRAWSETX;
+
     if (strcmp(token_str, "TOKEN_DRAWSETY") == 0)               return TOKEN_DRAWSETY;
+
     if (strcmp(token_str, "TOKEN_DRAWSHOW_CURSOR") == 0)        return TOKEN_DRAWSHOW_CURSOR;
+
     if (strcmp(token_str, "TOKEN_DRAWHIDE_CURSOR") == 0)        return TOKEN_DRAWHIDE_CURSOR;
+
     if (strcmp(token_str, "TOKEN_DRAWCURSOR_COLOR") == 0)       return TOKEN_DRAWCURSOR_COLOR;
+
     if (strcmp(token_str, "TOKEN_DRAWPEN_SIZE") == 0)           return TOKEN_DRAWPEN_SIZE;
+
     if (strcmp(token_str, "TOKEN_DRAWMOVE_FORWARD") == 0)       return TOKEN_DRAWMOVE_FORWARD;
+
     if (strcmp(token_str, "TOKEN_DRAWMOVE_BACKWARD") == 0)      return TOKEN_DRAWMOVE_BACKWARD;
+
     if (strcmp(token_str, "TOKEN_DRAWPIVOT_LEFT") == 0)         return TOKEN_DRAWPIVOT_LEFT;
+
     if (strcmp(token_str, "TOKEN_DRAWPIVOT_RIGHT") == 0)        return TOKEN_DRAWPIVOT_RIGHT;
+
     if (strcmp(token_str, "TOKEN_DRAWCIRCLE") == 0)             return TOKEN_DRAWCIRCLE;
+
     if (strcmp(token_str, "TOKEN_DRAWDOT") == 0)                return TOKEN_DRAWDOT;
+
     if (strcmp(token_str, "TOKEN_DRAWARC") == 0)                return TOKEN_DRAWARC;
+
     if (strcmp(token_str, "TOKEN_DRAWUPDATE") == 0)             return TOKEN_DRAWUPDATE;
+
     if (strcmp(token_str, "TOKEN_DRAWPENUP") == 0)              return TOKEN_DRAWPENUP;
+
     if (strcmp(token_str, "TOKEN_DRAWPENDOWN") == 0)            return TOKEN_DRAWPENDOWN;
+
     if (strcmp(token_str, "TOKEN_DRAWSHAPE") == 0)              return TOKEN_DRAWSHAPE;
+
     if (strcmp(token_str, "TOKEN_DRAWCLEAR_SCREEN") == 0)       return TOKEN_DRAWCLEAR_SCREEN;
+
     if (strcmp(token_str, "TOKEN_COMMA") == 0)                  return TOKEN_COMMA;
+
     if (strcmp(token_str, "TOKEN_SEMICOLON") == 0)              return TOKEN_SEMICOLON;
+
     if (strcmp(token_str, "TOKEN_EOF") == 0)                    return TOKEN_EOF;
+
     return -1;
+
+}
+
+
+// Fonction pour exécuter une commande Python Turtle
+void execute_turtle_command(const char *command) {
+    int result = PyRun_SimpleString(command);
+    if (result != 0) {
+        fprintf(stderr, "Erreur : Échec de l'exécution de la commande Turtle : %s\n", command);
+    }
 }
 
 // Fonction pour exécuter un token
@@ -103,154 +113,138 @@ void execute_token(TokenType token, const char *params) {
     char command[256];
     switch (token) {
         case TOKEN_DRAWCREATE_CURSOR: {
-            printf("TOKEN_DRAWCREATE_CURSOR : Non implémenté (params: %s)\n", params);
+            // Pas nécessaire pour Turtle, ignoré
+            printf("TOKEN_DRAWCREATE_CURSOR : Ignoré\n");
             break;
         }
         case TOKEN_DRAWSET_POS: {
             int x, y;
             sscanf(params, "%d %d", &x, &y);
-            update_cursor_position(x, y);
-            printf("Position du curseur mise à jour : (%d, %d)\n", cursor_x, cursor_y);
+            snprintf(command, sizeof(command), "pen.penup(); pen.goto(%d, %d); pen.pendown()", x, y);
+            execute_turtle_command(command);
+            printf("Curseur déplacé à la position : (%d, %d)\n", x, y);
             break;
         }
-        // A MODIFIER (tracer le trait si pendown)
         case TOKEN_DRAWGO: {
-            int x, y;
-            sscanf(params, "%d %d", &x, &y);
-            update_cursor_position(x, y);
-            printf("Position du curseur mise à jour : (%d, %d)\n", cursor_x, cursor_y);
+            int distance;
+            sscanf(params, "%d", &distance);
+            snprintf(command, sizeof(command), "pen.forward(%d)", distance);
+            execute_turtle_command(command);
+            printf("Avancé de %d unités\n", distance);
             break;
         }
         case TOKEN_DRAWSETX: {
             int x;
             sscanf(params, "%d", &x);
-            cursor_x = x;
-            printf("Position X du curseur mise à jour : %d\n", cursor_x);
+            snprintf(command, sizeof(command), "pen.setx(%d)", x);
+            execute_turtle_command(command);
+            printf("Position X définie à : %d\n", x);
             break;
         }
-        
         case TOKEN_DRAWSETY: {
             int y;
             sscanf(params, "%d", &y);
-            cursor_y = y;
-            printf("Position Y du curseur mise à jour : %d\n", cursor_y);
+            snprintf(command, sizeof(command), "pen.sety(%d)", y);
+            execute_turtle_command(command);
+            printf("Position Y définie à : %d\n", y);
             break;
         }
-        // A IMPLEMENTER SI PASSAGE A TURTLE 
-        // case TOKEN_DRAWSHOW_CURSOR: {
-        //     printf("TOKEN_DRAWSHOW_CURSOR : Non implémenté (params: %s)\n", params);
-        //     break;
-        // }
-        //
-        // case TOKEN_DRAWHIDE_CURSOR: {
-        //     printf("TOKEN_DRAWHIDE_CURSOR : Non implémenté (params: %s)\n", params);
-        //     break;
-        // }
+        case TOKEN_DRAWSHOW_CURSOR: {
+            snprintf(command, sizeof(command), "pen.showturtle()");
+            execute_turtle_command(command);
+            printf("Curseur affiché\n");
+            break;
+        }
+        case TOKEN_DRAWHIDE_CURSOR: {
+            snprintf(command, sizeof(command), "pen.hideturtle()");
+            execute_turtle_command(command);
+            printf("Curseur caché\n");
+            break;
+        }
         case TOKEN_DRAWCURSOR_COLOR: {
-            strncpy(cursor_color, params, sizeof(cursor_color) - 1);
-            cursor_color[sizeof(cursor_color) - 1] = '\0';
-            printf("Couleur du curseur mise à jour : %s\n", cursor_color);
+            snprintf(command, sizeof(command), "pen.color('%s')", params);
+            execute_turtle_command(command);
+            printf("Couleur du curseur définie à : %s\n", params);
             break;
         }
         case TOKEN_DRAWPEN_SIZE: {
-            sscanf(params, "%d", &pen_size);
-            printf("Taille du stylo mise à jour : %d\n", pen_size);
+            int size;
+            sscanf(params, "%d", &size);
+            snprintf(command, sizeof(command), "pen.pensize(%d)", size);
+            execute_turtle_command(command);
+            printf("Taille du stylo définie à : %d\n", size);
             break;
         }
         case TOKEN_DRAWMOVE_FORWARD: {
             int distance;
             sscanf(params, "%d", &distance);
-            cursor_y -= distance; // Mouvement vers le haut
-            printf("Déplacement vers l'avant : nouvelle position (%d, %d)\n", cursor_x, cursor_y);
+            snprintf(command, sizeof(command), "pen.forward(%d)", distance);
+            execute_turtle_command(command);
+            printf("Avancé de %d unités\n", distance);
             break;
         }
         case TOKEN_DRAWMOVE_BACKWARD: {
             int distance;
             sscanf(params, "%d", &distance);
-            cursor_y += distance; // Mouvement vers le bas
-            printf("Déplacement vers l'arrière : nouvelle position (%d, %d)\n", cursor_x, cursor_y);
+            snprintf(command, sizeof(command), "pen.backward(%d)", distance);
+            execute_turtle_command(command);
+            printf("Reculé de %d unités\n", distance);
             break;
         }
-        // IMPLÉMENTER CA POUR LES DIAGONALES
         case TOKEN_DRAWPIVOT_LEFT: {
-            printf("TOKEN_DRAWPIVOT_LEFT : Non implémenté (params: %s)\n", params);
+            int angle;
+            sscanf(params, "%d", &angle);
+            snprintf(command, sizeof(command), "pen.left(%d)", angle);
+            execute_turtle_command(command);
+            printf("Pivoté à gauche de %d degrés\n", angle);
             break;
         }
-        
         case TOKEN_DRAWPIVOT_RIGHT: {
-            printf("TOKEN_DRAWPIVOT_RIGHT : Non implémenté (params: %s)\n", params);
+            int angle;
+            sscanf(params, "%d", &angle);
+            snprintf(command, sizeof(command), "pen.right(%d)", angle);
+            execute_turtle_command(command);
+            printf("Pivoté à droite de %d degrés\n", angle);
             break;
         }
         case TOKEN_DRAWCIRCLE: {
             int radius;
             sscanf(params, "%d", &radius);
-            snprintf(command, sizeof(command),
-                     "canvas.create_oval(%d-%d, %d-%d, %d+%d, %d+%d, outline='%s', width=%d)",
-                     cursor_x, radius, cursor_y, radius, cursor_x, radius, cursor_y, radius,
-                     cursor_color, pen_size);
-            execute_canvas_command(command);
-            printf("Cercle dessiné avec un rayon de %d à la position (%d, %d)\n", radius, cursor_x, cursor_y);
+            snprintf(command, sizeof(command), "pen.circle(%d)", radius);
+            execute_turtle_command(command);
+            printf("Cercle dessiné avec un rayon de %d\n", radius);
             break;
         }
-        case TOKEN_DRAWDOT: {
-            snprintf(command, sizeof(command),
-                     "canvas.create_oval(%d-1, %d-1, %d+1, %d+1, fill='%s')",
-                     cursor_x, cursor_y, cursor_x, cursor_y, cursor_color);
-            execute_canvas_command(command);
-            printf("Point dessiné à la position (%d, %d) avec la couleur %s\n", cursor_x, cursor_y, cursor_color);
+         case TOKEN_DRAWPENUP: {
+            snprintf(command, sizeof(command), "pen.penup()");
+            execute_turtle_command(command);
+            printf("Stylo levé.\n");
             break;
         }
-        case TOKEN_DRAWARC: {
-            int radius, second_value;
-            sscanf(params, "%d %d", &radius, &second_value);
-            snprintf(command, sizeof(command),
-                     "canvas.create_arc(%d-%d, %d-%d, %d+%d, %d+%d, outline='%s', width=%d)",
-                     cursor_x, radius, cursor_y, radius, cursor_x, radius, cursor_y, radius,
-                     cursor_color, pen_size);
-            execute_canvas_command(command);
-            printf("Cercle dessiné avec un rayon de %d à la position (%d, %d)\n", radius, cursor_x, cursor_y);
-            break;
-        }
-        //INUTILE 
-        // case TOKEN_DRAWUPDATE: {
-        //     printf("TOKEN_DRAWUPDATE : Non implémenté (params: %s)\n", params);
-        //     break;
-        // }
-
-        // A implémenter
-        case TOKEN_DRAWPENUP: {
-            printf("TOKEN_DRAWPENUP : Non implémenté (params: %s)\n", params);
-            break;
-        }
-        
         case TOKEN_DRAWPENDOWN: {
-            printf("TOKEN_DRAWPENDOWN : Non implémenté (params: %s)\n", params);
+            snprintf(command, sizeof(command), "pen.pendown()");
+            execute_turtle_command(command);
+            printf("Stylo baissé.\n");
             break;
         }
-        // A FAIRE QUE SI EN TURLE
-        // case TOKEN_DRAWSHAPE: {
-        //     printf("TOKEN_DRAWSHAPE : Non implémenté (params: %s)\n", params);
-        //     break;
-        // }
         case TOKEN_DRAWCLEAR_SCREEN: {
-            snprintf(command, sizeof(command), "canvas.delete('all')");
-            execute_canvas_command(command);
-            printf("Écran effacé.\n");
+            snprintf(command, sizeof(command), "pen.clear()");
+            execute_turtle_command(command);
+            printf("Écran effacé\n");
             break;
         }
         case TOKEN_COMMA:
         case TOKEN_SEMICOLON:
         case TOKEN_EOF:
-            // Aucun effet direct sur le canvas
-            printf("Token de syntaxe détecté : %s\n", params ? params : "(aucun paramètre)");
+            // Aucun effet direct
+            printf("Token de syntaxe détecté\n");
             break;
 
         default:
-            printf("Token inconnu : Non implémenté (params: %s)\n", params);
+            printf("Token inconnu ou non implémenté\n");
             break;
     }
 }
-
 
 // Fonction principale pour lire et analyser le fichier
 void read_file(const char *filename) {
@@ -266,29 +260,28 @@ void read_file(const char *filename) {
         while (token_str) {
             // Lire les paramètres après le token
             char *params = strtok(NULL, "\n");
-            // Récupère les tokens dont il s'agit puis l'execute 
+            // Identifier et exécuter le token
             TokenType token = identify_token(token_str);
             execute_token(token, params ? params : "");
             // Passer au token suivant
-            token_str = strtok(NULL, " "); 
+            token_str = strtok(NULL, " ");
         }
     }
 
     fclose(file);
-}
+}read_file
 
-/* int main() {
-    printf("Initialisation du canvas avec Tkinter...\n");
-    initialize_canvas();
+int main() {
+    printf("Initialisation de Turtle...\n");
+    initialize_turtle();
 
-    //RECUPERE LE FICHIER ET EFFECTUE LE TRAITEMENT
+    // Lire et traiter le fichier d'entrée
     const char *filename = "../output/tokens.txt";
     read_file(filename);
 
+    printf("Lancement de la fenêtre Turtle...\n");
+    execute_turtle_command("screen.mainloop()");
 
-    printf("Lancement de la boucle Tkinter...\n");
-    execute_canvas_command("root.mainloop()");
-    
     Py_Finalize();
     return 0;
-} */
+}
