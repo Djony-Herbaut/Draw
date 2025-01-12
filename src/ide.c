@@ -1,10 +1,13 @@
 #include "ide.h"
 #include "lexer.h" 
 #include "read_tokens.h"
-#include <cairo.h>
+#include "parser.h"
 #include <pthread.h>
 
 GtkWidget *console_log = NULL; // Global widget for console/log display
+
+Token global_tokens[MAX_TOKENS];
+int global_num_tokens = 0;
 
 // Callback for "New file" action
 void on_new_file(GtkWidget *widget, gpointer data) {
@@ -127,24 +130,26 @@ void on_save_file(GtkWidget *widget, gpointer data) {
 // Function to create the menu bar with "File" options
 GtkWidget* create_menu() {
     GtkWidget *menubar = gtk_menu_bar_new();
-    GtkWidget *filemenu = gtk_menu_new();
-    GtkWidget *fileitem = gtk_menu_item_new_with_label("Fichier");
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileitem), filemenu);
 
-    // Menu items: New, Open, Save
+    // Menu items
     GtkWidget *new_item = gtk_menu_item_new_with_label("Nouveau");
     GtkWidget *open_item = gtk_menu_item_new_with_label("Ouvrir");
     GtkWidget *save_item = gtk_menu_item_new_with_label("Sauvegarder");
+    GtkWidget *lexer_item = gtk_menu_item_new_with_label("Exécuter Lexer");
+    GtkWidget *parser_item = gtk_menu_item_new_with_label("Exécuter Parser");
 
-    gtk_menu_shell_append(GTK_MENU_SHELL(filemenu), new_item);
-    gtk_menu_shell_append(GTK_MENU_SHELL(filemenu), open_item);
-    gtk_menu_shell_append(GTK_MENU_SHELL(filemenu), save_item);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), fileitem);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), new_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), open_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), save_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), lexer_item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), parser_item);
 
     // Store menu items for signal connection
     g_object_set_data(G_OBJECT(menubar), "new_item", new_item);
     g_object_set_data(G_OBJECT(menubar), "open_item", open_item);
     g_object_set_data(G_OBJECT(menubar), "save_item", save_item);
+    g_object_set_data(G_OBJECT(menubar), "lexer_item", lexer_item);
+    g_object_set_data(G_OBJECT(menubar), "parser_item", parser_item);
 
     return menubar;
 }
@@ -154,11 +159,17 @@ void connect_menu_signals(GtkWidget *menubar, GtkTextBuffer *buffer) {
     GtkWidget *new_item = g_object_get_data(G_OBJECT(menubar), "new_item");
     GtkWidget *open_item = g_object_get_data(G_OBJECT(menubar), "open_item");
     GtkWidget *save_item = g_object_get_data(G_OBJECT(menubar), "save_item");
+    GtkWidget *lexer_item = g_object_get_data(G_OBJECT(menubar), "lexer_item");
+    GtkWidget *parser_item = g_object_get_data(G_OBJECT(menubar), "parser_item");
 
-    // Connect signals to their respective callbacks
+    // Connect existing signals
     g_signal_connect(new_item, "activate", G_CALLBACK(on_new_file), buffer);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_open_file), buffer);
     g_signal_connect(save_item, "activate", G_CALLBACK(on_save_file), buffer);
+
+    // Connect new signals
+    g_signal_connect(lexer_item, "activate", G_CALLBACK(on_run_lexer), buffer);
+    g_signal_connect(parser_item, "activate", G_CALLBACK(on_run_parser), buffer);
 }
 
 // Function to set up the text editor
@@ -200,15 +211,86 @@ void setup_console(GtkWidget *vbox, GtkWidget **console) {
 }
 
 void *run_tk_canvas(void *arg) {
+    Token *tokens = (Token *)arg;
+
     printf("Initialisation du canvas avec Tkinter...\n");
     initialize_canvas();
 
-    const char *filename = "../output/tokens.txt";
-    read_file(filename);
+    for (int i = 0; tokens[i].type != TOKEN_EOF; i++) {
+        const char *params = (i + 1 < MAX_TOKENS && tokens[i + 1].type != TOKEN_EOF) ? tokens[i + 1].lexeme : NULL;
+        execute_token(tokens[i], params); // Passer l'objet Token entier
+        if (params) i++; // Sauter les tokens de paramètres
+    }
 
     printf("Lancement de la boucle Tkinter...\n");
     execute_canvas_command("root.mainloop()");
     return NULL;
+}
+
+void on_run_lexer(GtkWidget *widget, gpointer data) {
+    if (!data) {
+        log_to_console("Erreur : le buffer est nul.");
+        return;
+    }
+
+    GtkTextBuffer *buffer = (GtkTextBuffer *)data;
+    GtkTextIter start, end;
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+
+    // Appeler le lexer pour générer les tokens
+    global_num_tokens = tokenize(text, global_tokens);
+
+    // Vérifiez et affichez tous les tokens générés
+    for (int i = 0; i < global_num_tokens; i++) {
+        char token_info[256];
+        snprintf(token_info, sizeof(token_info), "Token %d : Type=%d, Lexeme='%s'", 
+                 i, global_tokens[i].type, global_tokens[i].lexeme);
+        log_to_console(token_info);
+    }
+
+    if (global_num_tokens <= 0) {
+        log_to_console("Erreur : aucun token valide trouvé.");
+    } else {
+        log_to_console("Lexage réussi : liste des tokens générée.");
+    }
+
+    g_free(text);
+}
+
+void on_run_parser(GtkWidget *widget, gpointer data) {
+    if (global_num_tokens <= 0) {
+        log_to_console("Erreur : aucune liste de tokens disponible. Exécutez le lexer d'abord.");
+        return;
+    }
+
+    // Afficher les tokens pour débogage
+    for (int i = 0; i < global_num_tokens; i++) {
+        printf("Token %d : Type=%d, Lexeme='%s'\n", i, global_tokens[i].type, global_tokens[i].lexeme);
+    }
+
+    // Initialiser l'index pour le parser
+    int index = 0;
+
+    // Appeler le parser pour analyser les tokens
+    ASTNode *ast = parse_program(global_tokens, &index);
+
+    if (ast == NULL) {
+        log_to_console("Erreur de syntaxe : vérifiez votre code.");
+        return;
+    }
+
+    // Si la syntaxe est valide, lancer le canvas
+    log_to_console("Syntaxe valide : lancement du dessin...");
+    pthread_t canvas_thread;
+    if (pthread_create(&canvas_thread, NULL, run_tk_canvas, global_tokens) != 0) {
+        log_to_console("Erreur : Impossible de lancer le canvas.");
+    } else {
+        pthread_detach(canvas_thread); // Détache le thread pour éviter les fuites
+    }
+
+    // Libérer la mémoire de l'AST
+    free(ast);
 }
 
 // Apply syntax highlighting using the lexer functions
@@ -245,11 +327,11 @@ void init_syntax_highlighting(GtkTextBuffer *buffer) {
     GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(buffer);
 
     GtkTextTag *keyword_tag = gtk_text_tag_new("keyword");
-    g_object_set(keyword_tag, "foreground", "blue", NULL);
+    g_object_set(keyword_tag, "foreground", "red", NULL);
     gtk_text_tag_table_add(tag_table, keyword_tag);
 
     GtkTextTag *symbol_tag = gtk_text_tag_new("symbol");
-    g_object_set(symbol_tag, "foreground", "green", NULL);
+    g_object_set(symbol_tag, "foreground", "blue", NULL);
     gtk_text_tag_table_add(tag_table, symbol_tag);
 }
 
@@ -275,7 +357,6 @@ void log_to_console(const char *message) {
 int main(int argc, char *argv[]) {
     GtkWidget *window;
     GtkWidget *vbox;
-    GtkWidget *console_log = NULL;
     GtkWidget *textview, *console;
     GtkTextBuffer *buffer = NULL; // Buffer for the text editor
     GtkWidget *menubar;
@@ -307,20 +388,12 @@ int main(int argc, char *argv[]) {
     // 4. Set up the console/log area
     setup_console(vbox, &console);
 
-    // Lancer le canvas dans un thread séparé
-    pthread_t tk_thread;
-    if (pthread_create(&tk_thread, NULL, run_tk_canvas, NULL) != 0) {
-        fprintf(stderr, "Erreur : Impossible de créer le thread pour Tkinter.\n");
-        return 1;
-    }
-
     // Show the window and all child widgets
     g_printerr("Debug: Window displayed.\n");
     gtk_widget_show_all(window);
 
+    // Start the GTK main loop
     gtk_main();
 
-    pthread_join(tk_thread, NULL);
-    
     return 0;
 }
