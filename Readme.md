@@ -71,70 +71,168 @@ condition{
 
 ...
 
-# IDE Draw++
+# Draw++
 
-## Description
-**IDE Draw++** is a simple text-based Integrated Development Environment (IDE) built using **GTK+ 3**. It allows users to:
-
-- Create, open, and save text files.
-- Display logs and console output.
-- Visualize graphical content in a dedicated drawing area.
-
-This project demonstrates basic usage of GTK for creating graphical user interfaces and integrates features like a text editor, file handling, and a drawing area.
+Draw++ est une interface graphique interactive permettant d'interpréter des commandes de dessin, de valider leur syntaxe et de générer des graphiques sur un canvas externe basé sur Tkinter.
 
 ---
 
-## Features
-- **Text Editor**: Edit and manage text files with basic functionalities.
-- **Console/Logs**: View logs, errors, and outputs.
-- **Drawing Area**: Dedicated space for graphical content or visual outputs.
-- **Menu Bar**: Easy access to file operations such as "New", "Open", and "Save".
+## Fonctionnalités principales
+
+### Éditeur de texte
+- Permet à l'utilisateur de saisir des commandes de dessin dans un format structuré.
+- Exemples de commandes supportées :
+  ```
+  drawcircle 50
+  drawgo 100 200
+  ```
+
+### Menu interactif
+- **Options disponibles :**
+  - **Nouveau** : Efface l'éditeur.
+  - **Ouvrir** : Charge un fichier contenant des commandes.
+  - **Sauvegarder** : Enregistre le contenu de l'éditeur.
+  - **Exécuter Lexer** : Analyse le contenu pour générer une liste de tokens.
+  - **Exécuter Parser** : Valide la syntaxe des tokens et exécute le dessin si valide.
+
+### Console de logs
+- Affiche les messages d'erreur, de débogage et les étapes du processus (lexage, parsing, exécution).
+
+### Canvas Tkinter
+- Interprète les commandes validées et génère des graphiques interactifs (cercles, lignes, points, etc.).
 
 ---
 
-## Prerequisites
-To compile and run the project, you need the following libraries and tools:
+## Structure de l'IDE
 
-- **GTK+ 3** (development files)
-- **gcc** (GNU Compiler Collection)
-- **pkg-config** (to manage GTK dependencies)
+### Composants de l'interface graphique
+
+#### Fenêtre principale
+- Créée à l'aide de **GTK+**.
+- Comprend :
+  - Un éditeur de texte.
+  - Une console pour les logs.
+  - Une barre de menu.
+
+#### Barre de menu
+- Créée dans la fonction `create_menu`.
+- Les options du menu sont connectées à des callbacks définis dans `ide.c`.
+
+#### Éditeur de texte
+- Utilise un `GtkTextView` pour permettre à l'utilisateur d'éditer des commandes.
+- Son contenu est analysé lors de l'exécution du lexer.
+
+#### Console de logs
+- Utilise un autre `GtkTextView` pour afficher les messages du programme.
+- Les messages sont ajoutés via la fonction `log_to_console`.
+
+#### Canvas Tkinter
+- Lancé dans un thread séparé via la fonction `run_tk_canvas`.
+- Gère l'exécution des commandes validées.
 
 ---
 
-## Installation on Linux
+## Fonctionnement de l'IDE
 
-1. Install the required libraries and tools:
-   ```bash
-   sudo apt update
-   sudo apt install libgtk-3-dev gcc pkg-config
+### 1. Exécution du Lexer
+
+- **Action :** L'utilisateur clique sur "Exécuter Lexer" dans le menu.
+- **Processus :**
+  - Le texte de l'éditeur est récupéré et analysé via la fonction `tokenize`.
+  - Les tokens générés sont stockés dans `global_tokens`.
+  - Les tokens sont affichés dans la console pour débogage.
+
+### 2. Exécution du Parser
+
+- **Action :** L'utilisateur clique sur "Exécuter Parser" dans le menu.
+- **Processus :**
+  - La liste des tokens (`global_tokens`) est analysée via `parse_program` (définie dans `parser.h`).
+  - Si la syntaxe est valide, un thread est créé pour lancer le canvas.
+
+### 3. Lancement du Canvas
+
+- **Action :** L'IDE passe les tokens au canvas via `run_tk_canvas`.
+- **Processus :**
+  - Chaque token est interprété par `execute_token`.
+  - Les commandes graphiques correspondantes sont générées et exécutées via **Tkinter**.
+
+---
+
+## Dépendances externes
+
+L'IDE utilise plusieurs bibliothèques externes :
+- **GTK+** : Pour créer l'interface graphique.
+- **Python 3** : Pour gérer le canvas Tkinter.
+- **Pthreads** : Pour exécuter le canvas dans un thread séparé.
+
+---
+
+## Commande de compilation
+
+Utilisez la commande suivante pour compiler l'IDE :
+```bash
+gcc -o ide ide.c read_tokens.c lexer.c token.c parser.c \
+    `pkg-config --cflags --libs gtk+-3.0` -I/usr/include/python3.12 -lpython3.12 -lpthread -Wall -Wextra -g
+```
+
+---
+
+## Exemple d'utilisation
+
+1. **Saisissez le contenu suivant dans l'éditeur :**
+   ```
+   drawcircle 50
+   drawgo 100 200
    ```
 
-2. Clone the project repository:
-   ```bash
-   git clone <repository-url>
-   cd <project-folder>
-   ```
+2. **Cliquez sur "Exécuter Lexer" :**
+   - La console affiche les tokens générés :
+     ```
+     Token 0 : Type=13, Lexeme='drawcircle'
+     Token 1 : Type=51, Lexeme='50'
+     Token 2 : Type=14, Lexeme='drawgo'
+     Token 3 : Type=51, Lexeme='100'
+     Token 4 : Type=51, Lexeme='200'
+     ```
 
-3. Compile the project:
-   ```bash
-    gcc -o ide ide.c lexer.c token.c `pkg-config --cflags --libs gtk+-3.0`
-   ```
+3. **Cliquez sur "Exécuter Parser" :**
+   - Si valide, la console indique :
+     ```
+     Syntaxe valide : lancement du dessin...
+     ```
+   - Un canvas s'ouvre et affiche les formes demandées.
 
-4. Run the executable:
-   ```bash
-   ./ide
-   ```
+---
+
+## Résumé des fonctions principales dans `ide.c`
+
+| Fonction         | Description                                                                 |
+|------------------|-----------------------------------------------------------------------------|
+| `create_menu`    | Crée la barre de menu et initialise ses options.                          |
+| `setup_editor`   | Initialise l'éditeur de texte et son buffer.                              |
+| `setup_console`  | Initialise la console de logs.                                             |
+| `on_run_lexer`   | Exécute le lexer, génère les tokens et les affiche dans la console.       |
+| `on_run_parser`  | Valide les tokens via `parse_program` et lance le canvas si valide.        |
+| `run_tk_canvas`  | Interprète les tokens et exécute les commandes graphiques dans Tkinter. |
 
 ---
 
-## Usage
-- **New File**: Clear the editor to start a new file.
-- **Open File**: Load a text file into the editor.
-- **Save File**: Save the content of the editor to a file.
-- **Console/Logs**: Monitor logs and messages.
-- **Drawing Area**: Visualize graphical content.
+## Fichiers utilisés dans l'IDE
+
+- **`read_tokens.c`** : Fournit des utilitaires pour manipuler les tokens.
+- **`lexer.c`** : Contient la fonction `tokenize` pour générer des tokens.
+- **`parser.c`** : Définit `parse_program` et d'autres outils pour analyser la syntaxe.
+- **`token.c`** : Définit les types de tokens et leur correspondance avec les commandes.
 
 ---
+
+## Prochaines étapes
+
+- Ajout de nouvelles commandes graphiques.
+- Validation syntaxique avancée (conditions, boucles, etc.).
+- Personnalisation du canvas (couleurs, épaisseurs de traits, etc.).
+
+
 
 ## READ_TOKENS
 
