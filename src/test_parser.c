@@ -104,7 +104,7 @@ void test_parse_double_condition() {
 }
 
 // Test: Parsing d'une boucle for
-void test_parse_for_loop() {
+void test_parse_for_loop_success() {
     Token tokens[] = {
         {TOKEN_D_FOR, "for", 1, 1},       // "for"
         {TOKEN_LPAREN, "(", 1, 5},       // "("
@@ -153,13 +153,13 @@ void test_parse_for_loop() {
         return;
     }
 
-    if (strcmp(node->children[0]->type, "initialization") != 0) {
-        printf("Test parse_for_loop failed: expected first child 'initialization', got '%s'\n", node->children[0]->type);
-    } else if (strcmp(node->children[1]->type, "condition") != 0) {
+    if (strcmp(node->children[0]->type, "variable_declaration") != 0) {
+        printf("Test parse_for_loop failed: expected first child 'variable_declaration', got '%s'\n", node->children[0]->type);
+    } else if (strcmp(node->children[1]->type, "condition_expr") != 0) {
         printf("Test parse_for_loop failed: expected second child 'condition', got '%s'\n", node->children[1]->type);
     } else if (strcmp(node->children[2]->type, "increment") != 0) {
         printf("Test parse_for_loop failed: expected third child 'increment', got '%s'\n", node->children[2]->type);
-    } else if (strcmp(node->children[3]->type, "body") != 0) {
+    } else if (strcmp(node->children[3]->type, "block") != 0) {
         printf("Test parse_for_loop failed: expected fourth child 'body', got '%s'\n", node->children[3]->type);
     } else {
         printf("Test parse_for_loop passed\n");
@@ -168,7 +168,38 @@ void test_parse_for_loop() {
     free_ast(node);
 }
 
-void test_parse_while_loop() {
+void test_for_loop_failure() {
+    Token tokens[] = {
+        {TOKEN_D_FOR, "for", 1, 1},          // "for"
+        {TOKEN_LPAREN, "(", 1, 5},          // "("
+        {TOKEN_VARNBR, "nbr", 1, 6},        // Déclaration : type
+        {TOKEN_DRAWV_, "i", 1, 10},         // Déclaration : nom de variable
+        {TOKEN_ASSIGN, "=", 1, 12},         // "="
+        {TOKEN_NBR, "0", 1, 14},            // Valeur assignée
+        // Manque un point-virgule ici
+        {TOKEN_DRAWV_, "i", 1, 16},         // Condition incorrecte (devrait être un opérateur comme "<")
+        {TOKEN_ASSIGN, "=", 1, 18},         // Affectation incorrecte dans la condition
+        {TOKEN_NBR, "10", 1, 20},           // Valeur incorrecte dans la condition
+        {TOKEN_SEMICOLON, ";", 1, 22},      // ";"
+        {TOKEN_DRAWV_, "i", 1, 24},         // Incrémentation : variable
+        {TOKEN_ASSIGN, "=", 1, 26},         // "="
+        {TOKEN_DRAWV_, "i", 1, 28},         // Valeur incrémentée incorrecte (manque opérateur "+")
+        {TOKEN_RPAREN, ")", 1, 30},         // ")" manquant
+        {TOKEN_LBRACE, "{", 1, 32},         // "{"
+        {TOKEN_RBRACE, "}", 1, 34}          // "}"
+    };
+
+    int index = 0;
+    ASTNode *node = parse_for_loop(tokens, &index);
+
+    if (node == NULL) {
+        printf("Test for_loop_fail passed: errors detected successfully.\n");
+    } else {
+        printf("Test for_loop_fail failed: invalid loop was parsed as valid.\n");
+    }
+}
+
+void test_parse_while_loop_success() {
     Token tokens[] = {
         {TOKEN_D_WHILE, "while", 1, 1},
         {TOKEN_LPAREN, "(", 1, 7},
@@ -206,15 +237,51 @@ void test_parse_while_loop() {
         return;
     }
 
-    if (strcmp(node->children[0]->type, "condition") != 0) {
+    if (strcmp(node->children[0]->type, "condition_expr") != 0) {
         printf("Test parse_while_loop failed: expected first child 'condition', got '%s'\n", node->children[0]->type);
-    } else if (strcmp(node->children[1]->type, "body") != 0) {
+    } else if (strcmp(node->children[1]->type, "block") != 0) {
         printf("Test parse_while_loop failed: expected second child 'body', got '%s'\n", node->children[1]->type);
     } else {
         printf("Test parse_while_loop passed\n");
     }
 
     free_ast(node);
+}
+
+void test_while_loop_failure() {
+    // Cas 1 : Parenthèse ouvrante manquante
+    Token tokens1[] = {
+        {TOKEN_D_WHILE, "while", 1, 1},
+        {TOKEN_VARNBR, "x", 1, 7},
+        {TOKEN_INF, "<", 1, 9},
+        {TOKEN_NBR, "10", 1, 11},
+        {TOKEN_RPAREN, ")", 1, 13},
+        {TOKEN_LBRACE, "{", 1, 15},
+        {TOKEN_RBRACE, "}", 1, 16}
+    };
+    int index1 = 0;
+    ASTNode *node1 = parse_while_loop(tokens1, &index1);
+    if (node1 == NULL) {
+        printf("Test while_loop_fail (missing '(') passed\n");
+    } else {
+        printf("Test while_loop_fail (missing '(') failed\n");
+    }
+
+    // Cas 2 : Condition absente
+    Token tokens2[] = {
+        {TOKEN_D_WHILE, "while", 1, 1},
+        {TOKEN_LPAREN, "(", 1, 7},
+        {TOKEN_RPAREN, ")", 1, 9},
+        {TOKEN_LBRACE, "{", 1, 11},
+        {TOKEN_RBRACE, "}", 1, 12}
+    };
+    int index2 = 0;
+    ASTNode *node2 = parse_while_loop(tokens2, &index2);
+    if (node2 == NULL) {
+        printf("Test while_loop_fail (missing condition) passed\n");
+    } else {
+        printf("Test while_loop_fail (missing condition) failed\n");
+    }
 }
 
 // Test: Parsing des instructions draw
@@ -295,13 +362,21 @@ void test_error_handling() {
 }
 
 int main() {
+
     test_create_node();
     test_add_child();
+
     test_parse_draw_stmt();
+
     test_parse_condition();
     test_parse_double_condition();
-    test_parse_for_loop();
-    test_parse_while_loop();
+
+    test_parse_for_loop_success();
+    test_for_loop_failure();
+
+    test_parse_while_loop_success();
+    test_while_loop_failure();
+
     test_error_handling();
         const char *tokens[] = {
         "TOKEN_DRAWSET_POS", "100", "100", "TOKEN_SEMICOLON",

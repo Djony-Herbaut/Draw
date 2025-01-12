@@ -579,12 +579,12 @@ ASTNode *parse_increment(Token *tokens, int *index) {
 }
 
 ASTNode *parse_for_loop(Token *tokens, int *index) {
+    
     Token current = tokens[*index];
     ASTNode *for_node = create_node("for_loop", current);
 
 
     if (current.type == TOKEN_D_FOR) {
-        add_child(for_node, create_node("loop_type", current));
         (*index)++;
 
         // Vérification de la parenthèse ouvrante
@@ -622,10 +622,11 @@ ASTNode *parse_for_loop(Token *tokens, int *index) {
                             if (block != NULL) {
                                 add_child(for_node, block);  // Ajout du bloc
                                 // Vérification du nombre d'enfants
-                                if (for_node->children_count != 5) {  // Attendre 5 enfants pour la boucle for
-                                    printf("Test parse_for_loop failed: expected 5 children, got %d\n", for_node->children_count);
+                                if (for_node->children_count != 4) {  // Attendre 5 enfants pour la boucle for
+                                    printf("Test parse_for_loop failed: expected 4 children, got %d\n", for_node->children_count);
                                     return NULL;
                                 }
+                                return for_node;
                             } else {
                                 printf("Erreur syntaxique dans loop ligne %d, colonne %d: Bloc manquant\n",
                                        current.line, current.col);
@@ -661,7 +662,6 @@ ASTNode *parse_while_loop(Token *tokens, int *index){
     ASTNode *while_node = create_node("while_loop", current);
 
      if (current.type == TOKEN_D_WHILE) {
-        add_child(while_node, create_node("loop_type", current));
         (*index)++;
 
         // Vérification de la parenthèse ouvrante
@@ -682,10 +682,11 @@ ASTNode *parse_while_loop(Token *tokens, int *index){
                     if (block != NULL) {
                         add_child(while_node, block);  // Ajout du bloc
                         // Vérification du nombre d'enfants
-                                if (while_node->children_count != 3) {  // Attendre 5 enfants pour la boucle for
-                                    printf("Test parse_while_loop failed: expected 3 children, got %d\n", while_node->children_count);
-                                    return NULL;
-                                }
+                        if (while_node->children_count != 2) {  // Attendre 5 enfants pour la boucle for
+                            printf("Test parse_while_loop failed: expected 2 children, got %d\n", while_node->children_count);
+                            return NULL;
+                        }
+                            return while_node;
                     } else {
                         printf("Erreur syntaxique dans loop ligne %d, colonne %d: Bloc manquant\n",
                                current.line, current.col);
