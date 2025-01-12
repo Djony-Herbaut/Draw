@@ -65,6 +65,8 @@ typedef enum {
 
     // Autres types
     TOKEN_NBR,                     // 123, 3.14
+    TOKEN_VARNBR,                  // Var type nbr
+    TOKEN_VARSTR,                  // Var type STRING
     TOKEN_STR,                     // "red"
     TOKEN_VARIABLE,                // drawv_myVar - nom associés au mot clé drawv_
     TOKEN_UNKNOWN,                 // Inconnus (erreurs de lexing)

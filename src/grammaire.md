@@ -13,11 +13,12 @@ P : règles de production
     T = { TOKEN_DRAWCREATE_CURSOR, TOKEN_DRAWSET_POS, TOKEN_DRAWGO,TOKEN_DRAWSETX, TOKEN_DRAWSETY, TOKEN_DRAWSHOW_CURSOR,TOKEN_DRAWHIDE_CURSOR, TOKEN_DRAWCURSOR_COLOR, TOKEN_DRAWPEN_SIZE,
     TOKEN_DRAWMOVE_FORWARD, TOKEN_DRAWMOVE_BACKWARD, TOKEN_DRAWPIVOT_LEFT,TOKEN_DRAWPIVOT_RIGHT, TOKEN_DRAWCIRCLE, TOKEN_DRAWDOT,TOKEN_DRAWARC, TOKEN_DRAWUPDATE, TOKEN_DRAWPENUP, TOKEN_DRAWPENDOWN,TOKEN_DRAWSHAPE, TOKEN_DRAWCLEAR_SCREEN,
     TOKEN_DRAWV_,TOKEN_DRAWF, TOKEN_D_IF, TOKEN_D_ELSE, TOKEN_D_FOR, TOKEN_D_WHILE,TOKEN_DRAWT_SLEEP,
-    TOKEN_LPAREN, TOKEN_RPAREN, TOKEN_LBRACE,TOKEN_RBRACE, TOKEN_COMMA,TOKEN_SEMICOLON, TOKEN_ASSIGN, TOKEN_SUP, TOKEN_INF, TOKEN_LEQ, TOKEN_GEQ, TOKEN_EQ, TOKEN_NEQ, TOKEN_AND, TOKEN_OR, TOKEN_NOT,TOKEN_PLUS, TOKEN_MOINS, TOKEN_MULT, TOKEN_DIV, TOKEN_POW TOKEN_NBR, TOKEN_STR, TOKEN_VARIABLE, TOKEN_EOF }
+    TOKEN_LPAREN, TOKEN_RPAREN, TOKEN_LBRACE,TOKEN_RBRACE, TOKEN_COMMA,TOKEN_SEMICOLON, TOKEN_VARNBR, TOKEN_VARSTR, TOKEN_ASSIGN, TOKEN_SUP, TOKEN_INF, TOKEN_LEQ, TOKEN_GEQ, TOKEN_EQ, TOKEN_NEQ, TOKEN_AND, TOKEN_OR, TOKEN_NOT,TOKEN_PLUS, TOKEN_MOINS, TOKEN_MULT, TOKEN_DIV, TOKEN_POW TOKEN_NBR, TOKEN_STR, TOKEN_VARIABLE, TOKEN_EOF }
 
 **Elements non terminaux afin de generer les regles**
-N = { program, statement, block, statement_list, draw_stmt,setcolor_stmt, move_stmt, parameters, shape, condition,
-loop, condition_expr, comparison_operator, value }
+N = { program, statement, block, statement_list, draw_stmt, setcolor_stmt, move_stmt, parameters, shape, condition,
+loop, condition_expr, comparison_operator, value, var_decl }
+
 
 **axiome**
 S = program
@@ -45,7 +46,7 @@ value : Peut être une constante numérique (number) ou une variable (variable).
 P =
   1. program → statement program | block program | TOKEN_EOF
 
-  2. statement → draw_stmt | setcolor_stmt | move_stmt | condition | loop
+  2. statement → draw_stmt | setcolor_stmt | move_stmt | condition | loop | var_decl
 
   3. block → TOKEN_LBRACE statement_list TOKEN_RBRACE
 
@@ -78,7 +79,7 @@ P =
 
   7. move_stmt → TOKEN_DRAWSET_POS TOKEN_LPAREN value TOKEN_COMMA value TOKEN_RPAREN TOKEN_SEMICOLON    
 
-  8. parameters → TOKEN_LPAREN TOKEN_NBR TOKEN_RPAREN | ε
+  8. parameters → TOKEN_LPAREN value TOKEN_RPAREN | ε
 
   10. condition → TOKEN_D_IF TOKEN_LPAREN condition_expr TOKEN_RPAREN block (TOKEN_D_ELSE block | ε)
 
@@ -105,5 +106,8 @@ P =
                             | TOKEN_NEQ
 
   17. value → TOKEN_NBR | TOKEN_VARIABLE | TOKEN_STR
+
+  18. var_decl → TOKEN_VARNBR TOKEN_VARIABLE TOKEN_ASSIGN value TOKEN_SEMICOLON
+                | TOKEN_VARSTR TOKEN_VARIABLE TOKEN_ASSIGN TOKEN_STR TOKEN_SEMICOLON
 
 

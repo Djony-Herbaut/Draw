@@ -24,6 +24,8 @@ TokenDictionnary keywords[] = {
     {TOKEN_DRAWSHAPE, "drawshape"},
     {TOKEN_DRAWCLEAR_SCREEN, "drawclearscreen"},
     {TOKEN_DRAWV_, "drawv_variable"},
+    {TOKEN_VARNBR, "nbr"},
+    {TOKEN_VARSTR, "string"},
     {TOKEN_DRAWF, "drawf"},
     {TOKEN_D_IF, "d_if"},
     {TOKEN_D_ELSE, "d_else"},

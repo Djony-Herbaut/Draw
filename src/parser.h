@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "token.h"
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct ASTNode {
     char *type;                 // Type de nœud : "program", "draw_stmt", "condition", etc.
@@ -16,13 +17,10 @@ typedef struct ASTNode {
 } ASTNode;
 
 // Fonction pour les tokens "Draw"
-bool is_draw_stmt(TokenType type) {
-    return type == TOKEN_DRAWCREATE_CURSOR ||
-           type == TOKEN_DRAWGO ||
+bool is_draw_stmt_param(TokenType type) {
+    return type == TOKEN_DRAWGO ||
            type == TOKEN_DRAWSETX ||
            type == TOKEN_DRAWSETY ||
-           type == TOKEN_DRAWSHOW_CURSOR ||
-           type == TOKEN_DRAWHIDE_CURSOR ||
            type == TOKEN_DRAWCURSOR_COLOR ||
            type == TOKEN_DRAWPEN_SIZE ||
            type == TOKEN_DRAWMOVE_FORWARD ||
@@ -32,12 +30,18 @@ bool is_draw_stmt(TokenType type) {
            type == TOKEN_DRAWCIRCLE ||
            type == TOKEN_DRAWDOT ||
            type == TOKEN_DRAWARC ||
-           type == TOKEN_DRAWUPDATE ||
-           type == TOKEN_DRAWPENUP ||
-           type == TOKEN_DRAWPENDOWN ||
            type == TOKEN_DRAWSHAPE ||
-           type == TOKEN_DRAWCLEAR_SCREEN ||
            type == TOKEN_DRAWT_SLEEP;
+}
+
+bool is_draw_stmt_noParam(TokenType type) {
+    return type == TOKEN_DRAWCREATE_CURSOR ||
+    type == TOKEN_DRAWSHOW_CURSOR ||
+    type == TOKEN_DRAWHIDE_CURSOR ||
+    type == TOKEN_DRAWCLEAR_SCREEN ||
+    type == TOKEN_DRAWPENUP ||
+    type == TOKEN_DRAWPENDOWN ||
+    type == TOKEN_DRAWUPDATE ;
 }
 
 //Construction d'un noeud a partir d'un token
@@ -63,7 +67,7 @@ ASTNode *parse_value(Token *tokens, int *index) {
     Token current = tokens[*index];
 
     // Verifier si le token est un nombre ou une variable
-    if (current.type == TOKEN_NBR || current.type == TOKEN_VARIABLE) {
+    if (current.type == TOKEN_NBR || current.type == TOKEN_STR || current.type == TOKEN_DRAWV_) {
         ASTNode *node = create_node("value", current);
         (*index)++;
         return node;
@@ -185,43 +189,84 @@ ASTNode *parse_block(Token *tokens, int *index) {
     return block_node;
 }
 
-
 ASTNode *parse_draw_stmt(Token *tokens, int *index) {
     Token current = tokens[*index];
     ASTNode *node = create_node("draw_stmt", current);
 
-    if (is_draw_stmt(current.type)) {
+    if (is_draw_stmt_param(current.type)) {  // Cas où la commande nécessite un paramètre
         add_child(node, create_node("command", current));
         (*index)++;
-        //On verifie si le token qui suit une fonction draw est une parenthese gauche
+        
+        // Vérification de la parenthèse gauche
         if (tokens[*index].type == TOKEN_LPAREN) {
             (*index)++;
-            //On verifie les parametres
-            if (tokens[*index].type == TOKEN_NBR) {
-                add_child(node, create_node("param", tokens[*index]));      // A revoir le nombre de parametres possibles
+            
+            // Vérification des paramètres
+            if (tokens[*index].type == TOKEN_NBR || tokens[*index].type == TOKEN_DRAWV_ || tokens[*index].type == TOKEN_STR) {
+                add_child(node, create_node("param", tokens[*index]));
                 (*index)++;
+            } else {
+                printf("Erreur : paramètre manquant ou invalide ligne %d, colonne %d\n",
+                       tokens[*index].line, tokens[*index].col);
+                return NULL;
             }
-            //on verifie la parenthsese droite
+            
+            // Vérification de la parenthèse droite
             if (tokens[*index].type == TOKEN_RPAREN) {
                 (*index)++;
-                //On verifie le point virgule
+                
+                // Vérification du point-virgule
                 if (tokens[*index].type == TOKEN_SEMICOLON) {
                     (*index)++;
                     return node;
                 } else {
-                    printf("Erreur : point-virgule manquant a la fin du draw_stmt ligne %d, colonne %d\n", 
+                    printf("Erreur : point-virgule manquant à la fin de la commande ligne %d, colonne %d\n",
                            tokens[*index].line, tokens[*index].col);
+                    return NULL;
                 }
             } else {
-                printf("Erreur : parenthese fermante ')' manquante ligne %d, colonne %d\n", 
+                printf("Erreur : parenthèse fermante ')' manquante ligne %d, colonne %d\n",
                        tokens[*index].line, tokens[*index].col);
+                return NULL;
             }
         } else {
-            printf("Erreur : parenthese ouvrante '(' manquante apres la commande ligne %d, colonne %d\n", 
+            printf("Erreur : parenthèse ouvrante '(' manquante après la commande ligne %d, colonne %d\n",
                    tokens[*index].line, tokens[*index].col);
+            return NULL;
+        }
+    } else if (is_draw_stmt_noParam(current.type)) {  // Cas où la commande ne nécessite pas de paramètre
+        add_child(node, create_node("command", current));
+        (*index)++;
+        
+        // Vérification de la parenthèse gauche
+        if (tokens[*index].type == TOKEN_LPAREN) {
+            (*index)++;
+            
+            // Vérification de la parenthèse droite
+            if (tokens[*index].type == TOKEN_RPAREN) {
+                (*index)++;
+                
+                // Vérification du point-virgule
+                if (tokens[*index].type == TOKEN_SEMICOLON) {
+                    (*index)++;
+                    return node;
+                } else {
+                    printf("Erreur : point-virgule manquant à la fin de la commande ligne %d, colonne %d\n",
+                           tokens[*index].line, tokens[*index].col);
+                    return NULL;
+                }
+            } else {
+                printf("Erreur : parenthèse fermante ')' manquante ligne %d, colonne %d\n",
+                       tokens[*index].line, tokens[*index].col);
+                return NULL;
+            }
+        } else {
+            printf("Erreur : parenthèse ouvrante '(' manquante après la commande ligne %d, colonne %d\n",
+                   tokens[*index].line, tokens[*index].col);
+            return NULL;
         }
     } else {
-        printf("Erreur : commande draw invalide ligne %d, colonne %d\n", 
+        printf("Erreur : commande draw invalide ligne %d, colonne %d\n",
                current.line, current.col);
     }
 
@@ -400,56 +445,288 @@ ASTNode *parse_move_stmt(Token *tokens, int *index) {
     return node;
 }
 
-
-ASTNode *parse_loop(Token *tokens, int *index) {
+ASTNode *parse_variable_declaration(Token *tokens, int *index) {
     Token current = tokens[*index];
-    ASTNode *node = create_node("loop", current);
+    ASTNode *node = create_node("variable_declaration", current);
 
-    if (current.type == TOKEN_D_FOR || current.type == TOKEN_D_WHILE) {
-        add_child(node, create_node("loop_type", current));
-        (*index)++;
-        //verif parenthese ouvrante
-        if (tokens[*index].type == TOKEN_LPAREN) {
-            (*index)++;
-            // on utilise parse_stmt car le token qui suit un "loop" peut etre soit une condition(while) ou un statement(for)
-            ASTNode *stmt = parse_statement(tokens, index);
-            if (stmt != NULL) {
-                add_child(node, stmt);
-                //verif parenthese fermante
-                if (tokens[*index].type == TOKEN_RPAREN) {
-                    (*index)++;
-                    // traitement du block qui suit
-                    ASTNode *block = parse_block(tokens, index);
-                    if (block != NULL) {
-                        add_child(node, block);
-                        return node;
-                    }
+    // Vérifier que la déclaration commence avec un type valide (TOKEN_VARNBR ou TOKEN_VARSTR)
+    if (current.type == TOKEN_VARNBR || current.type == TOKEN_VARSTR) {
+        add_child(node, create_node("type", current)); // Ajouter le type comme enfant
+        (*index)++; // Consommer le type
+
+        // Vérifier le nom de la variable
+        if (tokens[*index].type == TOKEN_DRAWV_) {  // Utiliser TOKEN_DRAWV_ pour le nom de la variable
+            Token var_name = tokens[*index];
+            add_child(node, create_node("variable_name", var_name)); // Ajouter le nom de la variable comme enfant
+            (*index)++; // Consommer le nom de la variable
+
+            // Vérifier l'assignation avec '='
+            if (tokens[*index].type == TOKEN_ASSIGN) {
+                (*index)++; // Consommer '='
+
+                // Vérifier la valeur assignée
+                Token value_token = tokens[*index];
+                if ((current.type == TOKEN_VARNBR && value_token.type == TOKEN_NBR) ||
+                    (current.type == TOKEN_VARSTR && value_token.type == TOKEN_STR)) {
+                    add_child(node, create_node("initial_value", value_token)); // Ajouter la valeur initiale comme enfant
+                    (*index)++; // Consommer la valeur assignée
+                } else {
+                    printf("Erreur syntaxique dans déclaration de variable: valeur initiale incorrecte ligne %d, colonne %d\n", 
+                           value_token.line, value_token.col);
+                    free(node);
+                    return NULL;
                 }
+
+                // Vérifier la présence du point-virgule
+                if (tokens[*index].type == TOKEN_SEMICOLON) {
+                    (*index)++; // Consommer le point-virgule
+                } else {
+                    printf("Erreur syntaxique: ';' attendu ligne %d, colonne %d\n", 
+                           tokens[*index].line, tokens[*index].col);
+                    free(node);
+                    return NULL;
+                }
+            } else {
+                printf("Erreur syntaxique dans déclaration de variable: '=' attendu ligne %d, colonne %d\n", 
+                       tokens[*index].line, tokens[*index].col);
+                free(node);
+                return NULL;
             }
+        } else {
+            printf("Erreur syntaxique dans déclaration de variable: nom de variable attendu ligne %d, colonne %d\n", 
+                   tokens[*index].line, tokens[*index].col);
+            free(node);
+            return NULL;
         }
+    } else {
+        printf("Erreur syntaxique dans déclaration de variable: type attendu (varnbr ou varstr) ligne %d, colonne %d\n", 
+               current.line, current.col);
+        free(node);
+        return NULL;
     }
 
-    printf("Erreur syntaxique dans loop ligne %d, colonne %d\n", 
-           current.line, current.col);
-    return NULL;
+    return node;
 }
 
+ASTNode *parse_increment(Token *tokens, int *index) {
+    Token current = tokens[*index];
+
+    // Vérifier si l'expression commence par une variable (par exemple "i")
+    if (tokens[*index].type == TOKEN_DRAWV_) {
+        Token var_token = tokens[*index];
+        (*index)++;
+
+        // Vérifier le signe d'assignation "="
+        if (tokens[*index].type == TOKEN_ASSIGN) {
+            (*index)++;  // Consommer "="
+
+            // Vérifier la réassignation "i = i"
+            if (tokens[*index].type == TOKEN_DRAWV_) {
+                Token var_assignment_token = tokens[*index];
+                (*index)++;
+
+                // Vérifier si l'opérateur "+" est présent
+                if (tokens[*index].type == TOKEN_PLUS) {
+                    (*index)++;  // Consommer "+"
+
+                    // Vérifier que le deuxième terme est un nombre (par exemple "i = i + 1")
+                    if (tokens[*index].type == TOKEN_NBR) {
+                        Token number_token = tokens[*index];
+                        (*index)++;
+
+                        // Créer un nœud pour l'incrémentation
+                        ASTNode *node = create_node("increment", current);
+
+                        // Créer des nœuds pour chaque partie de l'expression
+                        ASTNode *var_node = create_node("variable", var_token);
+                        ASTNode *var_assignment_node = create_node("variable", var_assignment_token);
+                        ASTNode *plus_node = create_node("operator", tokens[*index - 1]);  // "+"
+                        ASTNode *number_node = create_node("number", number_token);
+
+                        // Ajouter les enfants au nœud d'incrément
+                        add_child(node, var_node);
+                        add_child(node, var_assignment_node);
+                        add_child(node, plus_node);
+                        add_child(node, number_node);
+
+                        return node;  // Retourner l'AST pour l'incrément
+                    } else {
+                        printf("Erreur syntaxique dans l'incrémentation : un nombre est attendu après '+' ligne %d, colonne %d\n",
+                               tokens[*index].line, tokens[*index].col);
+                        return NULL;
+                    }
+                } else {
+                    printf("Erreur syntaxique dans l'incrémentation : un signe '+' est attendu après '=' ligne %d, colonne %d\n",
+                           tokens[*index].line, tokens[*index].col);
+                    return NULL;
+                }
+            } else {
+                printf("Erreur syntaxique dans l'incrémentation : variable attendue après '=' ligne %d, colonne %d\n",
+                       tokens[*index].line, tokens[*index].col);
+                return NULL;
+            }
+        } else {
+            printf("Erreur syntaxique dans l'incrémentation : signe '=' attendu après la variable ligne %d, colonne %d\n",
+                   tokens[*index].line, tokens[*index].col);
+            return NULL;
+        }
+    } else {
+        printf("Erreur syntaxique dans l'incrémentation : une variable est attendue au début de l'incrément ligne %d, colonne %d\n",
+               current.line, current.col);
+    }
+
+    return NULL;  // Retourner NULL en cas d'erreur
+}
+
+ASTNode *parse_for_loop(Token *tokens, int *index) {
+    Token current = tokens[*index];
+    ASTNode *for_node = create_node("for_loop", current);
+
+
+    if (current.type == TOKEN_D_FOR) {
+        add_child(for_node, create_node("loop_type", current));
+        (*index)++;
+
+        // Vérification de la parenthèse ouvrante
+        if (tokens[*index].type == TOKEN_LPAREN) {
+            (*index)++;
+
+            // 1. Analyse de la déclaration de la variable (par exemple "int i = 0")
+            ASTNode *var_decl = parse_variable_declaration(tokens, index);
+            if (var_decl != NULL) {
+                add_child(for_node, var_decl);  // Ajout de la déclaration de variable
+
+                // 2. Analyse de la condition (par exemple "i < 10")
+                ASTNode *condition = parse_condition_expr(tokens, index);
+                if (condition != NULL) {
+                    add_child(for_node, condition);  // Ajout de la condition
+                    if (tokens[*index].type == TOKEN_SEMICOLON) {
+                        (*index)++;  // Consommer ";"
+                    } else {
+                        printf("Erreur syntaxique dans loop ligne %d, colonne %d: ';' manquant après la déclaration de variable\n", 
+                            current.line, current.col);
+                        return NULL;
+                    }
+
+                    // 3. Analyse de l'incrémentation (par exemple "i = i + 1")
+                    ASTNode *increment = parse_increment(tokens, index);
+                    if (increment != NULL) {
+                        add_child(for_node, increment);  // Ajout de l'incrémentation
+
+                        // Vérification de la parenthèse fermante
+                        if (tokens[*index].type == TOKEN_RPAREN) {
+                            (*index)++;
+
+                            // 4. Traitement du bloc qui suit
+                            ASTNode *block = parse_block(tokens, index);
+                            if (block != NULL) {
+                                add_child(for_node, block);  // Ajout du bloc
+                                // Vérification du nombre d'enfants
+                                if (for_node->children_count != 5) {  // Attendre 5 enfants pour la boucle for
+                                    printf("Test parse_for_loop failed: expected 5 children, got %d\n", for_node->children_count);
+                                    return NULL;
+                                }
+                            } else {
+                                printf("Erreur syntaxique dans loop ligne %d, colonne %d: Bloc manquant\n",
+                                       current.line, current.col);
+                            }
+                        } else {
+                            printf("Erreur syntaxique dans loop ligne %d, colonne %d: Parenthèse fermante manquante\n", 
+                                   current.line, current.col);
+                        }
+                    } else {
+                        printf("Erreur syntaxique dans loop ligne %d, colonne %d: Incrémentation incorrecte\n", 
+                               current.line, current.col);
+                    }
+                } else {
+                    printf("Erreur syntaxique dans loop ligne %d, colonne %d: Condition incorrecte\n", 
+                           current.line, current.col);
+                }
+            } else {
+                printf("Erreur syntaxique dans loop ligne %d, colonne %d: Déclaration de variable incorrecte\n", 
+                       current.line, current.col);
+            }
+        } else {
+            printf("Erreur syntaxique dans loop ligne %d, colonne %d: Parenthèse ouvrante manquante\n", 
+                   current.line, current.col);
+        }
+    }
+    printf("Erreur syntaxique dans loop ligne %d, colonne %d\n", 
+           current.line, current.col);
+    return NULL;  // Retourne NULL en cas d'erreur
+}
+
+ASTNode *parse_while_loop(Token *tokens, int *index){
+    Token current = tokens[*index];
+    ASTNode *while_node = create_node("while_loop", current);
+
+     if (current.type == TOKEN_D_WHILE) {
+        add_child(while_node, create_node("loop_type", current));
+        (*index)++;
+
+        // Vérification de la parenthèse ouvrante
+        if (tokens[*index].type == TOKEN_LPAREN) {
+            (*index)++;
+
+            // 1. Analyse de la condition (par exemple "i < 10")
+            ASTNode *condition = parse_condition_expr(tokens, index);
+            if (condition != NULL) {
+                add_child(while_node, condition);  // Ajout de la condition
+
+                // Vérification de la parenthèse fermante
+                if (tokens[*index].type == TOKEN_RPAREN) {
+                    (*index)++;
+
+                    // 2. Traitement du bloc qui suit
+                    ASTNode *block = parse_block(tokens, index);
+                    if (block != NULL) {
+                        add_child(while_node, block);  // Ajout du bloc
+                        // Vérification du nombre d'enfants
+                                if (while_node->children_count != 3) {  // Attendre 5 enfants pour la boucle for
+                                    printf("Test parse_while_loop failed: expected 3 children, got %d\n", while_node->children_count);
+                                    return NULL;
+                                }
+                    } else {
+                        printf("Erreur syntaxique dans loop ligne %d, colonne %d: Bloc manquant\n",
+                               current.line, current.col);
+                    }
+                } else {
+                    printf("Erreur syntaxique dans loop ligne %d, colonne %d: Parenthèse fermante manquante\n", 
+                           current.line, current.col);
+                }
+            } else {
+                printf("Erreur syntaxique dans loop ligne %d, colonne %d: Condition incorrecte\n", 
+                       current.line, current.col);
+            }
+        } else {
+            printf("Erreur syntaxique dans loop ligne %d, colonne %d: Parenthèse ouvrante manquante\n", 
+                   current.line, current.col);
+        }
+    }
+    printf("Erreur syntaxique dans loop ligne %d, colonne %d\n", 
+           current.line, current.col);
+    return NULL;  // Retourne NULL en cas d'erreur
+
+}
 
 // Fait office de dispatcher pour les differents token
 ASTNode *parse_statement(Token *tokens, int *index) {
     Token current = tokens[*index];
 
-    if (is_draw_stmt(current.type)) {
+    if (is_draw_stmt_param(current.type) || is_draw_stmt_noParam(current.type)) {
         return parse_draw_stmt(tokens, index);
-    } 
+    }
     // traitement des conditions
     else if (current.type == TOKEN_D_IF) {
         return parse_condition(tokens, index);
     } 
     // Traitement des boucles
-    else if (current.type == TOKEN_D_FOR || current.type == TOKEN_D_WHILE) {
-        return parse_loop(tokens, index);
+    else if (current.type == TOKEN_D_FOR ) {
+        return parse_for_loop(tokens, index);
     } 
+    else if (current.type == TOKEN_D_WHILE){
+        return parse_while_loop(tokens,index);
+    }
     // Traitement token drawcursor
     else if (current.type == TOKEN_DRAWCURSOR_COLOR) {
         return parse_setcolor_stmt(tokens, index);
@@ -463,7 +740,6 @@ ASTNode *parse_statement(Token *tokens, int *index) {
         return NULL;
     }
 }
-
 
 ASTNode *parse_program(Token *tokens, int *index) {
 
@@ -485,4 +761,25 @@ ASTNode *parse_program(Token *tokens, int *index) {
 
     return program_node;
 }
+
+void write_tokens_to_file(const char *tokens[], int token_count, const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+        return;
+    }
+
+    for (int i = 0; i < token_count; i++) {
+        fprintf(file, "%s ", tokens[i]);
+
+        // Ajoute un saut de ligne après un TOKEN_SEMICOLON
+        if (strcmp(tokens[i], "TOKEN_SEMICOLON") == 0) {
+            fprintf(file, "\n");
+        }
+    }
+
+    fclose(file);
+    printf("Tokens écrits dans le fichier %s avec succès.\n", filename);
+}
+
 #endif
