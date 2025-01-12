@@ -1,4 +1,5 @@
 #ifndef TOKEN_H
+#define TOKEN_STRING 100 // Longueur max string
 #define TOKEN_H
 
 typedef enum {
@@ -51,6 +52,7 @@ typedef enum {
     TOKEN_MULT,                    // *
     TOKEN_DIV,                     // /
     TOKEN_POW,                     // ** (puissance en Python)
+    TOKEN_QUOTE,                   // "
 
     // Symboles - Comparaison et Logique
     TOKEN_SUP,                     // >

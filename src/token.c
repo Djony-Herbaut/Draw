@@ -46,6 +46,7 @@ TokenDictionnary symbols[] = {
     {TOKEN_RBRACKET, "]"},       // Crochet fermant
     {TOKEN_COMMA, ","},          // Virgule
     {TOKEN_SEMICOLON, ";"},      // Point-virgule (C)
+    {TOKEN_QUOTE, "\""},        // Quote 
     {TOKEN_ASSIGN, "="},         // Assignation
     {TOKEN_PLUS, "+"},           // Addition
     {TOKEN_MOINS, "-"},          // Soustraction
