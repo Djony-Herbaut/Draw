@@ -167,7 +167,15 @@ L'IDE utilise plusieurs bibliothèques externes :
 
 ---
 
+
 ## Commande de compilation
+
+---
+1. Install the required libraries and tools:
+   ```bash
+   sudo apt update
+   sudo apt install libgtk-3-dev gcc pkg-config python3-tk
+   ```
 
 Utilisez la commande suivante pour compiler l'IDE :
 ```bash
