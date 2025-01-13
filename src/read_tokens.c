@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "token.h"
+#include <stdbool.h>
+#include "read_tokens.h"
 
 #define MAX_LINE_LENGTH 256
 
@@ -211,7 +213,6 @@ void execute_token(TokenType token, const char *params) {
 }
 
 // Fonction principale pour lire et analyser le fichier
-// Fonction principale pour lire et analyser le fichier
 void read_file(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -223,30 +224,104 @@ void read_file(const char *filename) {
     while (fgets(line, sizeof(line), file)) {
         char *token_str = strtok(line, " ");
         while (token_str) {
-            // Lire les paramètres après le token
-            char *params = strtok(NULL, "\n");
-            // Identifier et exécuter le token
+            // Identifier le token
             TokenType token = identify_token(token_str);
+            if (token == -1) {
+                fprintf(stderr, "Erreur : Token non reconnu : %s\n", token_str);
+                token_str = strtok(NULL, " ");
+                continue;
+            }
+
+            // Lire les paramètres après le token
+            char *params = strtok(NULL, " ");
+            if (!validate_params(token, params)) {
+                fprintf(stderr, "Erreur : Paramètres invalides pour le token %s\n", token_str);
+                continue;
+            }
+
+            // Exécuter le token avec ses paramètres
             execute_token(token, params ? params : "");
+
             // Passer au token suivant
             token_str = strtok(NULL, " ");
         }
     }
 
     fclose(file);
+    printf("Lecture et exécution des commandes terminées.\n");
 }
 
-/* int main() {
-    printf("Initialisation de Turtle...\n");
-    initialize_turtle();
+bool validate_params(TokenType token, const char *params) {
+    if (params == NULL) {
+        // Les tokens qui nécessitent des paramètres ne peuvent pas avoir des paramètres NULL
+        switch (token) {
+            case TOKEN_DRAWSET_POS:
+            case TOKEN_DRAWGO:
+            case TOKEN_DRAWSETX:
+            case TOKEN_DRAWSETY:
+            case TOKEN_DRAWCURSOR_COLOR:
+            case TOKEN_DRAWPEN_SIZE:
+            case TOKEN_DRAWMOVE_FORWARD:
+            case TOKEN_DRAWMOVE_BACKWARD:
+            case TOKEN_DRAWPIVOT_LEFT:
+            case TOKEN_DRAWPIVOT_RIGHT:
+            case TOKEN_DRAWCIRCLE:
+            case TOKEN_DRAWDOT:
+            case TOKEN_DRAWARC:
+            case TOKEN_DRAWSHAPE:
+            case TOKEN_DRAWT_SLEEP:
+                printf("Erreur : le token %d nécessite des paramètres, mais aucun n'a été fourni.\n", token);
+                return false;
+            default:
+                return true; // Les autres tokens n'ont pas besoin de paramètres
+        }
+    }
 
-    // Lire et traiter le fichier d'entrée
-    const char *filename = "../output/tokens.txt";
-    read_file(filename);
+    // Validation des paramètres pour les tokens qui en ont besoin
+    switch (token) {
+        case TOKEN_DRAWSET_POS: {
+            int x, y;
+            if (sscanf(params, "%d %d", &x, &y) != 2) {
+                printf("Erreur : le token TOKEN_DRAWSET_POS nécessite deux paramètres (x y).\n");
+                return false;
+            }
+            break;
+        }
+        case TOKEN_DRAWGO:
+        case TOKEN_DRAWSETX:
+        case TOKEN_DRAWSETY:
+        case TOKEN_DRAWPEN_SIZE:
+        case TOKEN_DRAWMOVE_FORWARD:
+        case TOKEN_DRAWMOVE_BACKWARD:
+        case TOKEN_DRAWPIVOT_LEFT:
+        case TOKEN_DRAWPIVOT_RIGHT:
+        case TOKEN_DRAWCIRCLE:
+        case TOKEN_DRAWT_SLEEP: {
+            int value;
+            if (sscanf(params, "%d", &value) != 1) {
+                printf("Erreur : le token %d nécessite un paramètre entier.\n", token);
+                return false;
+            }
+            break;
+        }
+        case TOKEN_DRAWCURSOR_COLOR: {
+            // Accepte une chaîne comme paramètre
+            if (strlen(params) == 0) {
+                printf("Erreur : le token TOKEN_DRAWCURSOR_COLOR nécessite une chaîne comme paramètre.\n");
+                return false;
+            }
+            break;
+        }
+        case TOKEN_DRAWARC:
+        case TOKEN_DRAWSHAPE:
+        case TOKEN_DRAWDOT:
+            // Ajoutez des validations spécifiques si nécessaire
+            break;
 
-    printf("Lancement de la fenêtre Turtle...\n");
-    execute_turtle_command("screen.mainloop()");
+        default:
+            // Aucun paramètre requis pour les autres tokens
+            break;
+    }
 
-    Py_Finalize();
-    return 0;
-} */
+    return true;
+}

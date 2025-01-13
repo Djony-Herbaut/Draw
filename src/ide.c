@@ -247,44 +247,36 @@ void on_run_lexer(GtkWidget *widget, gpointer data) {
     // Appeler le lexer pour générer les tokens
     global_num_tokens = tokenize(text, global_tokens);
 
-    // Vérifiez et affichez tous les tokens générés
-    for (int i = 0; i < global_num_tokens; i++) {
-        char token_info[256];
-        snprintf(token_info, sizeof(token_info), "Token %d : Type=%d, Lexeme='%s'", 
-                 i, global_tokens[i].type, global_tokens[i].lexeme);
-        log_to_console(token_info);
-    }
-
     if (global_num_tokens <= 0) {
         log_to_console("Erreur : aucun token valide trouvé.");
-    } else {
-        log_to_console("Lexage réussi : liste des tokens générée.");
-
-        // Convertir les types de tokens en chaînes
-        for (int i = 0; i < global_num_tokens; i++) {
-            global_string_tokens[i] = strdup(token_type_to_string(global_tokens[i].type));
-        }
-        global_string_tokens[global_num_tokens] = NULL; // Terminer par NULL (optionnel)
+        g_free(text);
+        return;
     }
 
+    // Afficher la sortie du lexer pour débogage
+    printf("=== Sortie du lexer ===\n");
+    for (int i = 0; i < global_num_tokens; i++) {
+        printf("Token %d : Type = %d, Lexeme = \"%s\", Ligne = %d, Colonne = %d\n",
+               i, global_tokens[i].type, global_tokens[i].lexeme, global_tokens[i].line, global_tokens[i].col);
+    }
+
+    log_to_console("Lexage réussi : liste des tokens générée.");
     g_free(text);
 }
 
 void on_run_parser(GtkWidget *widget, gpointer data) {
-    if (global_num_tokens <= 0 || !global_string_tokens) {
+    if (global_num_tokens <= 0) {
         log_to_console("Erreur : aucune liste de tokens disponible. Exécutez le lexer d'abord.");
         return;
     }
 
     // Afficher les tokens pour débogage
-    log_to_console("Débogage : Liste des tokens détectés");
+    printf("=== Entrée du parser ===\n");
     for (int i = 0; i < global_num_tokens; i++) {
-        char debug_message[256];
-        snprintf(debug_message, sizeof(debug_message), "Token %d : %s", i, global_string_tokens[i]);
-        log_to_console(debug_message);
+        printf("Token %d : Type = %d, Lexeme = \"%s\"\n",
+               i, global_tokens[i].type, global_tokens[i].lexeme);
     }
 
-    // Appeler le parser pour analyser les tokens
     log_to_console("Analyse syntaxique en cours...");
     int index = 0;
     ASTNode *ast = parse_program(global_tokens, &index);
@@ -296,8 +288,8 @@ void on_run_parser(GtkWidget *widget, gpointer data) {
 
     log_to_console("Syntaxe valide : écriture des tokens nécessaires dans output/tokens.txt...");
 
-    // Écrire uniquement les types de tokens dans le fichier
-    write_tokens_to_file((const char **)global_string_tokens, global_num_tokens, "../output/tokens.txt");
+    // Écrire les tokens dans le fichier
+    write_tokens_to_file(global_tokens, global_num_tokens, "../output/tokens.txt");
 
     log_to_console("Écriture réussie et AST validé. Le dessin peut commencer.");
 

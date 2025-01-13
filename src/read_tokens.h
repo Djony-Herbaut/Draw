@@ -2,6 +2,7 @@
 #define READ_TOKEN_H
 
 #include "token.h" // Inclusion du fichier contenant la définition des tokens
+#include <stdbool.h>
 
 #define MAX_LINE_LENGTH 256
 
@@ -18,10 +19,12 @@ void execute_turtle_command(const char *command);
 void execute_token(TokenType token, const char *params);
 
 // Fonction pour identifier les tokens à partir d'une chaîne
-Token identify_token(const char *token_str);
+TokenType identify_token(const char *token_str);
 
 // Fonction principale pour lire et analyser le fichier
 void read_file(const char *filename);
+
+bool validate_params(TokenType token, const char *params);
 
 #endif // READ_TOKEN_H
 

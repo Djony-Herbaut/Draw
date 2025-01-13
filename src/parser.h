@@ -763,7 +763,7 @@ ASTNode *parse_program(Token *tokens, int *index) {
     return program_node;
 }
 
-void write_tokens_to_file(const char *tokens[], int token_count, const char *filename) {
+void write_tokens_to_file(const Token tokens[], int token_count, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("Erreur lors de l'ouverture du fichier");
@@ -771,10 +771,17 @@ void write_tokens_to_file(const char *tokens[], int token_count, const char *fil
     }
 
     for (int i = 0; i < token_count; i++) {
-        fprintf(file, "%s ", tokens[i]);
+        if (tokens[i].type == TOKEN_NBR || tokens[i].type == TOKEN_COMMA) {
+            // Si le token est un nombre, écrit son type suivi de son lexeme
+            fprintf(file, "%s ", tokens[i].lexeme);
+        } else {
+            // Sinon, écrit le nom lisible du type du token
+            const char *token_name = token_type_to_string(tokens[i].type);
+            fprintf(file, "%s ", token_name);
+        }
 
         // Ajoute un saut de ligne après un TOKEN_SEMICOLON
-        if (strcmp(tokens[i], "TOKEN_SEMICOLON") == 0) {
+        if (tokens[i].type == TOKEN_SEMICOLON) {
             fprintf(file, "\n");
         }
     }
