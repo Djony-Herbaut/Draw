@@ -98,4 +98,6 @@ extern const int keywordsDictSize;
 extern TokenDictionnary symbols[];
 extern const int symbolsDictSize;
 
+const char *token_type_to_string(TokenType type);
+
 #endif  // TOKEN_H

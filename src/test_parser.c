@@ -361,7 +361,7 @@ void test_error_handling() {
     }
 }
 
-int main() {
+/*int main() {
 
     test_create_node();
     test_add_child();
@@ -393,4 +393,4 @@ int main() {
     write_tokens_to_file(tokens, token_count, filename);
 
     return 0;
-}
+}*/

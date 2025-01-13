@@ -3,11 +3,14 @@
 #include "read_tokens.h"
 #include "parser.h"
 #include <pthread.h>
+#include "test_parser.c"
 
 GtkWidget *console_log = NULL; // Global widget for console/log display
 
 Token global_tokens[MAX_TOKENS];
 int global_num_tokens = 0;
+char *global_string_tokens[MAX_TOKENS] = {NULL};
+
 
 // Callback for "New file" action
 void on_new_file(GtkWidget *widget, gpointer data) {
@@ -211,19 +214,22 @@ void setup_console(GtkWidget *vbox, GtkWidget **console) {
 }
 
 void *run_tk_canvas(void *arg) {
-    Token *tokens = (Token *)arg;
+    printf("Initialisation de Turtle avec Tkinter...\n");
 
-    printf("Initialisation du canvas avec Tkinter...\n");
-    initialize_canvas();
+    // Initialiser Turtle
+    initialize_turtle();
 
-    for (int i = 0; tokens[i].type != TOKEN_EOF; i++) {
-        const char *params = (i + 1 < MAX_TOKENS && tokens[i + 1].type != TOKEN_EOF) ? tokens[i + 1].lexeme : NULL;
-        execute_token(tokens[i], params); // Passer l'objet Token entier
-        if (params) i++; // Sauter les tokens de paramètres
-    }
+    // Nom du fichier d'output contenant les commandes
+    const char *filename = "../output/tokens.txt";
 
-    printf("Lancement de la boucle Tkinter...\n");
-    execute_canvas_command("root.mainloop()");
+    // Utiliser read_file pour exécuter les commandes à partir du fichier
+    printf("Lecture et exécution des commandes depuis le fichier : %s\n", filename);
+    read_file(filename); 
+
+    // Lancer la boucle principale de Turtle
+    printf("Lancement de la fenêtre Turtle...\n");
+    execute_turtle_command("screen.mainloop()");
+
     return NULL;
 }
 
@@ -253,26 +259,34 @@ void on_run_lexer(GtkWidget *widget, gpointer data) {
         log_to_console("Erreur : aucun token valide trouvé.");
     } else {
         log_to_console("Lexage réussi : liste des tokens générée.");
+
+        // Convertir les types de tokens en chaînes
+        for (int i = 0; i < global_num_tokens; i++) {
+            global_string_tokens[i] = strdup(token_type_to_string(global_tokens[i].type));
+        }
+        global_string_tokens[global_num_tokens] = NULL; // Terminer par NULL (optionnel)
     }
 
     g_free(text);
 }
 
 void on_run_parser(GtkWidget *widget, gpointer data) {
-    if (global_num_tokens <= 0) {
+    if (global_num_tokens <= 0 || !global_string_tokens) {
         log_to_console("Erreur : aucune liste de tokens disponible. Exécutez le lexer d'abord.");
         return;
     }
 
     // Afficher les tokens pour débogage
+    log_to_console("Débogage : Liste des tokens détectés");
     for (int i = 0; i < global_num_tokens; i++) {
-        printf("Token %d : Type=%d, Lexeme='%s'\n", i, global_tokens[i].type, global_tokens[i].lexeme);
+        char debug_message[256];
+        snprintf(debug_message, sizeof(debug_message), "Token %d : %s", i, global_string_tokens[i]);
+        log_to_console(debug_message);
     }
 
-    // Initialiser l'index pour le parser
-    int index = 0;
-
     // Appeler le parser pour analyser les tokens
+    log_to_console("Analyse syntaxique en cours...");
+    int index = 0;
     ASTNode *ast = parse_program(global_tokens, &index);
 
     if (ast == NULL) {
@@ -280,17 +294,27 @@ void on_run_parser(GtkWidget *widget, gpointer data) {
         return;
     }
 
-    // Si la syntaxe est valide, lancer le canvas
-    log_to_console("Syntaxe valide : lancement du dessin...");
+    log_to_console("Syntaxe valide : écriture des tokens nécessaires dans output/tokens.txt...");
+
+    // Écrire uniquement les types de tokens dans le fichier
+    write_tokens_to_file((const char **)global_string_tokens, global_num_tokens, "../output/tokens.txt");
+
+    log_to_console("Écriture réussie et AST validé. Le dessin peut commencer.");
+
+    // Lancer un thread pour exécuter les instructions depuis le fichier généré
     pthread_t canvas_thread;
-    if (pthread_create(&canvas_thread, NULL, run_tk_canvas, global_tokens) != 0) {
-        log_to_console("Erreur : Impossible de lancer le canvas.");
-    } else {
-        pthread_detach(canvas_thread); // Détache le thread pour éviter les fuites
+    if (pthread_create(&canvas_thread, NULL, run_tk_canvas, "../output/tokens.txt") != 0) {
+        log_to_console("Erreur : Impossible de lancer l'exécution du canvas.");
+        free_ast(ast); // Libérer la mémoire en cas d'échec
+        return;
     }
 
+    pthread_detach(canvas_thread); // Détacher le thread pour éviter les fuites mémoire
+
+    log_to_console("Exécution du canvas lancée avec succès.");
+
     // Libérer la mémoire de l'AST
-    free(ast);
+    free_ast(ast);
 }
 
 // Apply syntax highlighting using the lexer functions

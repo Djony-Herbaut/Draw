@@ -2,6 +2,12 @@
 #define IDE_H
 
 #include <gtk/gtk.h>
+#include "token.h"
+#include "lexer.h"
+
+extern Token global_tokens[MAX_TOKENS];
+extern int global_num_tokens;
+extern char *global_string_tokens[MAX_TOKENS]; // Nouveauté pour stocker les chaînes de tokens
 
 // Callback functions for menu actions
 void on_new_file(GtkWidget *widget, gpointer data);
@@ -26,5 +32,7 @@ void init_syntax_highlighting(GtkTextBuffer *buffer);
 extern GtkWidget *console_log;  // Déclaration de console_log comme externe
 
 void log_to_console(const char *message);
+
+const char *get_token_string(TokenType type);
 
 #endif // IDE_H

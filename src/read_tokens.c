@@ -44,65 +44,34 @@ void initialize_turtle() {
 
 
 // Fonction pour identifier un token, retourn -1 en cas d'échec
-
 TokenType identify_token(const char *token_str) {
-
     if (strcmp(token_str, "TOKEN_DRAWCREATE_CURSOR") == 0)      return TOKEN_DRAWCREATE_CURSOR;
-
     if (strcmp(token_str, "TOKEN_DRAWSET_POS") == 0)            return TOKEN_DRAWSET_POS;
-
     if (strcmp(token_str, "TOKEN_DRAWGO") == 0)                 return TOKEN_DRAWGO;
-
     if (strcmp(token_str, "TOKEN_DRAWSETX") == 0)               return TOKEN_DRAWSETX;
-
     if (strcmp(token_str, "TOKEN_DRAWSETY") == 0)               return TOKEN_DRAWSETY;
-
     if (strcmp(token_str, "TOKEN_DRAWSHOW_CURSOR") == 0)        return TOKEN_DRAWSHOW_CURSOR;
-
     if (strcmp(token_str, "TOKEN_DRAWHIDE_CURSOR") == 0)        return TOKEN_DRAWHIDE_CURSOR;
-
     if (strcmp(token_str, "TOKEN_DRAWCURSOR_COLOR") == 0)       return TOKEN_DRAWCURSOR_COLOR;
-
     if (strcmp(token_str, "TOKEN_DRAWPEN_SIZE") == 0)           return TOKEN_DRAWPEN_SIZE;
-
     if (strcmp(token_str, "TOKEN_DRAWMOVE_FORWARD") == 0)       return TOKEN_DRAWMOVE_FORWARD;
-
     if (strcmp(token_str, "TOKEN_DRAWMOVE_BACKWARD") == 0)      return TOKEN_DRAWMOVE_BACKWARD;
-
     if (strcmp(token_str, "TOKEN_DRAWPIVOT_LEFT") == 0)         return TOKEN_DRAWPIVOT_LEFT;
-
     if (strcmp(token_str, "TOKEN_DRAWPIVOT_RIGHT") == 0)        return TOKEN_DRAWPIVOT_RIGHT;
-
     if (strcmp(token_str, "TOKEN_DRAWCIRCLE") == 0)             return TOKEN_DRAWCIRCLE;
-
-    if (strcmp(token_str, "TOKEN_DRAWDOT") == 0)                return TOKEN_DRAWDOT;
-
-    if (strcmp(token_str, "TOKEN_DRAWARC") == 0)                return TOKEN_DRAWARC;
-
-    if (strcmp(token_str, "TOKEN_DRAWUPDATE") == 0)             return TOKEN_DRAWUPDATE;
-
     if (strcmp(token_str, "TOKEN_DRAWPENUP") == 0)              return TOKEN_DRAWPENUP;
-
     if (strcmp(token_str, "TOKEN_DRAWPENDOWN") == 0)            return TOKEN_DRAWPENDOWN;
-
-    if (strcmp(token_str, "TOKEN_DRAWSHAPE") == 0)              return TOKEN_DRAWSHAPE;
-
     if (strcmp(token_str, "TOKEN_DRAWCLEAR_SCREEN") == 0)       return TOKEN_DRAWCLEAR_SCREEN;
-
     if (strcmp(token_str, "TOKEN_COMMA") == 0)                  return TOKEN_COMMA;
-
     if (strcmp(token_str, "TOKEN_SEMICOLON") == 0)              return TOKEN_SEMICOLON;
-
     if (strcmp(token_str, "TOKEN_EOF") == 0)                    return TOKEN_EOF;
-
     return -1;
-
 }
-
 
 // Fonction pour exécuter une commande Python Turtle
 void execute_turtle_command(const char *command) {
     int result = PyRun_SimpleString(command);
+    printf("Commande exécutée : %s\n", command);
     if (result != 0) {
         fprintf(stderr, "Erreur : Échec de l'exécution de la commande Turtle : %s\n", command);
     }
@@ -112,11 +81,6 @@ void execute_turtle_command(const char *command) {
 void execute_token(TokenType token, const char *params) {
     char command[256];
     switch (token) {
-        case TOKEN_DRAWCREATE_CURSOR: {
-            // Pas nécessaire pour Turtle, ignoré
-            printf("TOKEN_DRAWCREATE_CURSOR : Ignoré\n");
-            break;
-        }
         case TOKEN_DRAWSET_POS: {
             int x, y;
             sscanf(params, "%d %d", &x, &y);
@@ -247,6 +211,7 @@ void execute_token(TokenType token, const char *params) {
 }
 
 // Fonction principale pour lire et analyser le fichier
+// Fonction principale pour lire et analyser le fichier
 void read_file(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -269,9 +234,9 @@ void read_file(const char *filename) {
     }
 
     fclose(file);
-}read_file
+}
 
-int main() {
+/* int main() {
     printf("Initialisation de Turtle...\n");
     initialize_turtle();
 
@@ -284,4 +249,4 @@ int main() {
 
     Py_Finalize();
     return 0;
-}
+} */
