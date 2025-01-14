@@ -401,10 +401,10 @@ ASTNode *parse_condition(Token *tokens, int *index) {
 ASTNode *parse_setcolor_stmt(Token *tokens, int *index) {
     Token current = tokens[*index];
 
-    // Vérification de TOKEN_DRAWSETCOLOR
-    if (current.type != TOKEN_DRAWSETCOLOR) {
+    // Vérification de TOKEN_DRAWCURSOR_COLOR
+    if (current.type != TOKEN_DRAWCURSOR_COLOR) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu 'TOKEN_DRAWSETCOLOR' ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu 'TOKEN_DRAWCURSOR_COLOR' ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
@@ -416,7 +416,7 @@ ASTNode *parse_setcolor_stmt(Token *tokens, int *index) {
     current = tokens[*index];
     if (current.type != TOKEN_LPAREN) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu '(' apres 'TOKEN_DRAWSETCOLOR' ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu '(' apres 'TOKEN_DRAWCURSOR_COLOR' ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
