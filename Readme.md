@@ -189,18 +189,18 @@ gcc -o ide ide.c read_tokens.c lexer.c token.c parser.c \
 
 1. **Saisissez le contenu suivant dans l'éditeur :**
    ```
-   drawcircle 50
-   drawgo 100 200
+   drawcircle(50);
    ```
 
 2. **Cliquez sur "Exécuter Lexer" :**
    - La console affiche les tokens générés :
      ```
-     Token 0 : Type=13, Lexeme='drawcircle'
-     Token 1 : Type=51, Lexeme='50'
-     Token 2 : Type=14, Lexeme='drawgo'
-     Token 3 : Type=51, Lexeme='100'
-     Token 4 : Type=51, Lexeme='200'
+  Token 0 : Type = 13, Lexeme = "drawcircle"
+  Token 1 : Type = 28, Lexeme = "("
+  Token 2 : Type = 52, Lexeme = "50"
+  Token 3 : Type = 29, Lexeme = ")"
+  Token 4 : Type = 35, Lexeme = ";"
+  Token 5 : Type = 58, Lexeme = "EOF"
      ```
 
 3. **Cliquez sur "Exécuter Parser" :**
@@ -216,12 +216,13 @@ gcc -o ide ide.c read_tokens.c lexer.c token.c parser.c \
 
 | Fonction         | Description                                                                 |
 |------------------|-----------------------------------------------------------------------------|
-| `create_menu`    | Crée la barre de menu et initialise ses options.                          |
-| `setup_editor`   | Initialise l'éditeur de texte et son buffer.                              |
-| `setup_console`  | Initialise la console de logs.                                             |
-| `on_run_lexer`   | Exécute le lexer, génère les tokens et les affiche dans la console.       |
-| `on_run_parser`  | Valide les tokens via `parse_program` et lance le canvas si valide.        |
-| `run_tk_canvas`  | Interprète les tokens et exécute les commandes graphiques dans Tkinter. |
+| `create_menu`    | Crée la barre de menu et initialise ses options.                            |
+| `setup_editor`   | Initialise l'éditeur de texte et son buffer.                                |
+| `setup_console`  | Initialise la console de logs.                                              |
+| `log_to_console` | Affiche les erreurs renvoyés par les divers composants dans la console.     |
+| `on_run_lexer`   | Exécute le lexer, génère les tokens et les affiche dans la console.         |
+| `on_run_parser`  | Valide les tokens via `parse_program` et lance le canvas si valide.         |
+| `run_tk_canvas`  | Interprète les tokens et exécute les commandes graphiques dans Tkinter.     |
 
 ---
 
