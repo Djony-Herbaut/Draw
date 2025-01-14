@@ -5,136 +5,135 @@
 #include <pthread.h>
 #include "test_parser.c"
 
-GtkWidget *console_log = NULL; // Global widget for console/log display
+GtkWidget *console_log = NULL; // Widget global pour l'affichage de la console / des logs
 
 Token global_tokens[MAX_TOKENS];
 int global_num_tokens = 0;
 char *global_string_tokens[MAX_TOKENS] = {NULL};
 
-
-// Callback for "New file" action
+// Callback pour l'action "Nouveau fichier"
 void on_new_file(GtkWidget *widget, gpointer data) {
     if (!data) {
-        g_printerr("Error: Buffer is NULL in on_new_file.\n");
+        g_printerr("Erreur : Le buffer est NULL dans on_new_file.\n");
         return;
     }
-    g_printerr("Debug: on_new_file called, buffer = %p\n", data);
+    g_printerr("Debug : on_new_file appelé, buffer = %p\n", data);
 
-    // Clear the text buffer
+    // Effacer le contenu du buffer
     GtkTextBuffer *buffer = (GtkTextBuffer *)data;
     gtk_text_buffer_set_text(buffer, "", -1);
-    g_printerr("Debug: New file created successfully.\n");
+    g_printerr("Debug : Nouveau fichier créé avec succès.\n");
 }
 
-// Callback for "Open file" action
+// Callback pour l'action "Ouvrir un fichier"
 void on_open_file(GtkWidget *widget, gpointer data) {
     if (!data) {
-        g_printerr("Error: Buffer is NULL in on_open_file.\n");
+        g_printerr("Erreur : Le buffer est NULL dans on_open_file.\n");
         return;
     }
 
     GtkTextBuffer *buffer = (GtkTextBuffer *)data;
-    g_printerr("Debug: buffer in on_open_file = %p\n", buffer);
+    g_printerr("Debug : buffer dans on_open_file = %p\n", buffer);
 
-    // Open file chooser dialog
-    GtkWidget *dialog = gtk_file_chooser_dialog_new("Open a file",
+    // Ouvrir la boîte de dialogue pour choisir un fichier
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Ouvrir un fichier",
                                                     NULL,
                                                     GTK_FILE_CHOOSER_ACTION_OPEN,
-                                                    "Cancel", GTK_RESPONSE_CANCEL,
-                                                    "Open", GTK_RESPONSE_ACCEPT,
+                                                    "Annuler", GTK_RESPONSE_CANCEL,
+                                                    "Ouvrir", GTK_RESPONSE_ACCEPT,
                                                     NULL);
 
-    // If the user selects a file
+    // Si l'utilisateur sélectionne un fichier
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         if (!filename) {
-            g_printerr("Error: No file selected.\n");
+            g_printerr("Erreur : Aucun fichier sélectionné.\n");
             gtk_widget_destroy(dialog);
             return;
         }
-        g_printerr("Debug: Selected file name = %s\n", filename);
+        g_printerr("Debug : Nom du fichier sélectionné = %s\n", filename);
 
-        // Load file contents
+        // Charger le contenu du fichier
         char *content;
         gsize length;
         if (!g_file_get_contents(filename, &content, &length, NULL)) {
-            g_printerr("Error: Cannot read file %s.\n", filename);
+            g_printerr("Erreur : Impossible de lire le fichier %s.\n", filename);
             g_free(filename);
             gtk_widget_destroy(dialog);
             return;
         }
-        g_printerr("Debug: File content loaded (%lu characters).\n", (unsigned long)length);
+        g_printerr("Debug : Contenu du fichier chargé (%lu caractères).\n", (unsigned long)length);
 
-        // Set the file contents to the buffer
+        // Insérer le contenu du fichier dans le buffer
         gtk_text_buffer_set_text(buffer, content, length);
-        g_printerr("Debug: Content inserted into the buffer.\n");
+        g_printerr("Debug : Contenu inséré dans le buffer.\n");
 
-        // Free allocated memory
+        // Libérer la mémoire allouée
         g_free(content);
         g_free(filename);
     }
     gtk_widget_destroy(dialog);
 }
 
-// Callback for "Save file" action
+// Callback pour l'action "Sauvegarder un fichier"
 void on_save_file(GtkWidget *widget, gpointer data) {
     if (!data) {
-        g_printerr("Error: Buffer is NULL in on_save_file.\n");
+        g_printerr("Erreur : Le buffer est NULL dans on_save_file.\n");
         return;
     }
 
     GtkTextBuffer *buffer = (GtkTextBuffer *)data;
-    g_printerr("Debug: buffer in on_save_file = %p\n", buffer);
+    g_printerr("Debug : buffer dans on_save_file = %p\n", buffer);
 
-    // Open file chooser dialog for saving
-    GtkWidget *dialog = gtk_file_chooser_dialog_new("Save a file",
+    // Ouvrir la boîte de dialogue pour sauvegarder
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Sauvegarder un fichier",
                                                     NULL,
                                                     GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                    "Cancel", GTK_RESPONSE_CANCEL,
-                                                    "Save", GTK_RESPONSE_ACCEPT,
+                                                    "Annuler", GTK_RESPONSE_CANCEL,
+                                                    "Sauvegarder", GTK_RESPONSE_ACCEPT,
                                                     NULL);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
         if (!filename) {
-            g_printerr("Error: No file selected.\n");
+            g_printerr("Erreur : Aucun fichier sélectionné.\n");
             gtk_widget_destroy(dialog);
             return;
         }
-        g_printerr("Debug: Selected file name = %s\n", filename);
+        g_printerr("Debug : Nom du fichier sélectionné = %s\n", filename);
 
-        // Get text content from the buffer
+        // Récupérer le texte du buffer
         GtkTextIter start, end;
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
         if (!text) {
-            g_printerr("Error: Cannot retrieve text from the buffer.\n");
+            g_printerr("Erreur : Impossible de récupérer le texte du buffer.\n");
             g_free(filename);
             gtk_widget_destroy(dialog);
             return;
         }
-        g_printerr("Debug: Text to save (%s).\n", text);
+        g_printerr("Debug : Texte à sauvegarder (%s).\n", text);
 
-        // Write the text content to the file
+        // Écrire le texte dans le fichier
         if (!g_file_set_contents(filename, text, -1, NULL)) {
-            g_printerr("Error: Cannot write to file %s.\n", filename);
+            g_printerr("Erreur : Impossible d'écrire dans le fichier %s.\n", filename);
         } else {
-            g_printerr("Debug: File %s saved successfully.\n", filename);
+            g_printerr("Debug : Fichier %s sauvegardé avec succès.\n", filename);
         }
 
-        // Free allocated memory
+        // Libérer la mémoire allouée
         g_free(filename);
         g_free(text);
     }
     gtk_widget_destroy(dialog);
 }
 
-// Function to create the menu bar with "File" options
+// Fonction pour créer la barre de menu avec les options "Fichier"
 GtkWidget* create_menu() {
     GtkWidget *menubar = gtk_menu_bar_new();
 
-    // Menu items
+    // Éléments du menu
     GtkWidget *new_item = gtk_menu_item_new_with_label("Nouveau");
     GtkWidget *open_item = gtk_menu_item_new_with_label("Ouvrir");
     GtkWidget *save_item = gtk_menu_item_new_with_label("Sauvegarder");
@@ -147,7 +146,7 @@ GtkWidget* create_menu() {
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), lexer_item);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), parser_item);
 
-    // Store menu items for signal connection
+    // Stocker les éléments du menu pour connecter les signaux
     g_object_set_data(G_OBJECT(menubar), "new_item", new_item);
     g_object_set_data(G_OBJECT(menubar), "open_item", open_item);
     g_object_set_data(G_OBJECT(menubar), "save_item", save_item);
@@ -157,7 +156,7 @@ GtkWidget* create_menu() {
     return menubar;
 }
 
-// Function to connect menu signals to their callbacks
+// Fonction pour connecter les signaux des menus à leurs callbacks
 void connect_menu_signals(GtkWidget *menubar, GtkTextBuffer *buffer) {
     GtkWidget *new_item = g_object_get_data(G_OBJECT(menubar), "new_item");
     GtkWidget *open_item = g_object_get_data(G_OBJECT(menubar), "open_item");
@@ -165,24 +164,24 @@ void connect_menu_signals(GtkWidget *menubar, GtkTextBuffer *buffer) {
     GtkWidget *lexer_item = g_object_get_data(G_OBJECT(menubar), "lexer_item");
     GtkWidget *parser_item = g_object_get_data(G_OBJECT(menubar), "parser_item");
 
-    // Connect existing signals
+    // Connecter les signaux existants
     g_signal_connect(new_item, "activate", G_CALLBACK(on_new_file), buffer);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_open_file), buffer);
     g_signal_connect(save_item, "activate", G_CALLBACK(on_save_file), buffer);
 
-    // Connect new signals
+    // Connecter les nouveaux signaux
     g_signal_connect(lexer_item, "activate", G_CALLBACK(on_run_lexer), buffer);
     g_signal_connect(parser_item, "activate", G_CALLBACK(on_run_parser), buffer);
 }
 
-// Function to set up the text editor
+// Fonction pour configurer l'éditeur de texte
 void setup_editor(GtkWidget *vbox, GtkWidget **textview, GtkTextBuffer **buffer) {
     *textview = gtk_text_view_new();
     *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(*textview));
     GtkWidget *frame = gtk_frame_new("Éditeur de Texte");
 
     if (!*buffer) {
-        g_printerr("Error: Failed to initialize buffer in setup_editor.\n");
+        g_printerr("Erreur : Échec de l'initialisation du buffer dans setup_editor.\n");
         return;
     }
 
@@ -194,11 +193,11 @@ void setup_editor(GtkWidget *vbox, GtkWidget **textview, GtkTextBuffer **buffer)
 
     init_syntax_highlighting(*buffer);
 
-    // Apply coloring every time the text changes
+    // Appliquer la coloration à chaque changement de texte
     g_signal_connect(*buffer, "changed", G_CALLBACK(apply_syntax_highlighting), NULL);
 }
 
-// Function to set up the console/log area
+// Fonction pour configurer la zone console/logs
 void setup_console(GtkWidget *vbox, GtkWidget **console) {
     *console = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(*console), FALSE);
@@ -309,7 +308,7 @@ void on_run_parser(GtkWidget *widget, gpointer data) {
     free_ast(ast);
 }
 
-// Apply syntax highlighting using the lexer functions
+// Applique la coloration syntaxique en utilisant les fonctions du lexer
 void apply_syntax_highlighting(GtkTextBuffer *buffer) {
     GtkTextIter start, end;
     gtk_text_buffer_get_start_iter(buffer, &start);
@@ -328,7 +327,7 @@ void apply_syntax_highlighting(GtkTextBuffer *buffer) {
         gtk_text_buffer_get_iter_at_line_offset(buffer, &token_start, tokens[i].line - 1, tokens[i].col - 1);
         gtk_text_buffer_get_iter_at_line_offset(buffer, &token_end, tokens[i].line - 1, tokens[i].col + strlen(tokens[i].lexeme) - 1);
 
-        // Use is_keyword and is_symbol to detect the nature of the token
+        // Utilise is_keyword et is_symbol pour détecter la nature du token
         if (is_keyword(tokens[i].lexeme) != TOKEN_UNKNOWN) {
             gtk_text_buffer_apply_tag(buffer, keyword_tag, &token_start, &token_end);
         } else if (is_symbol(tokens[i].lexeme[0]) != TOKEN_UNKNOWN) {
@@ -338,7 +337,7 @@ void apply_syntax_highlighting(GtkTextBuffer *buffer) {
     g_free(text);
 }
 
-// Initialization of tags for syntax highlighting
+// Initialisation des tags pour la coloration syntaxique
 void init_syntax_highlighting(GtkTextBuffer *buffer) {
     GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(buffer);
 
@@ -351,7 +350,7 @@ void init_syntax_highlighting(GtkTextBuffer *buffer) {
     gtk_text_tag_table_add(tag_table, symbol_tag);
 }
 
-// Function to add errors to the console/log
+// Fonction pour ajouter des erreurs à la console/logs
 void log_to_console(const char *message) {
     if (console_log != NULL && GTK_IS_TEXT_VIEW(console_log)) {
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(console_log));
@@ -359,12 +358,12 @@ void log_to_console(const char *message) {
             GtkTextIter end;
             gtk_text_buffer_get_end_iter(buffer, &end);
 
-            // Validate that the message is in UTF-8 before insertion
+            // Vérifie que le message est en UTF-8 avant de l'insérer
             if (g_utf8_validate(message, -1, NULL)) {
                 gtk_text_buffer_insert(buffer, &end, message, -1);
                 gtk_text_buffer_insert(buffer, &end, "\n", -1);
             } else {
-                // If the string is not valid, log a generic error
+                // Si la chaîne n'est pas valide, log une erreur générique
                 gtk_text_buffer_insert(buffer, &end, "[Erreur UTF-8 détectée]\n", -1);
             }
         } else {
@@ -375,46 +374,46 @@ void log_to_console(const char *message) {
     }
 }
 
-// Main entry point of the program
+// Point d'entrée principal du programme
 int main(int argc, char *argv[]) {
     GtkWidget *window;
     GtkWidget *vbox;
     GtkWidget *textview, *console;
-    GtkTextBuffer *buffer = NULL; // Buffer for the text editor
+    GtkTextBuffer *buffer = NULL; // Buffer pour l'éditeur de texte
     GtkWidget *menubar;
 
-    // Initialize GTK
+    // Initialisation de GTK
     gtk_init(&argc, &argv);
-    g_printerr("Debug: GTK initialized successfully.\n");
+    g_printerr("Debug : GTK initialisé avec succès.\n");
 
-    // Create the main window
+    // Création de la fenêtre principale
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "IDE draw++");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    // Create a vertical box container
+    // Création d'un conteneur vertical
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    // 1. Create the menu bar (without signals)
+    // 1. Créer la barre de menu (sans signaux)
     menubar = create_menu();
     gtk_box_pack_start(GTK_BOX(vbox), menubar, FALSE, FALSE, 0);
 
-    // 2. Set up the editor to initialize the buffer
+    // 2. Configurer l'éditeur pour initialiser le buffer
     setup_editor(vbox, &textview, &buffer);
 
-    // 3. Connect signals to the menu once buffer is ready
+    // 3. Connecter les signaux au menu une fois le buffer prêt
     connect_menu_signals(menubar, buffer);
 
-    // 4. Set up the console/log area
+    // 4. Configurer la zone console/logs
     setup_console(vbox, &console);
 
-    // Show the window and all child widgets
-    g_printerr("Debug: Window displayed.\n");
+    // Afficher la fenêtre et tous les widgets enfants
+    g_printerr("Debug : Fenêtre affichée.\n");
     gtk_widget_show_all(window);
 
-    // Start the GTK main loop
+    // Démarrer la boucle principale de GTK
     gtk_main();
 
     return 0;
