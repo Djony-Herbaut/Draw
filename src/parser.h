@@ -771,18 +771,24 @@ void write_tokens_to_file(const Token tokens[], int token_count, const char *fil
     }
 
     for (int i = 0; i < token_count; i++) {
-        if (tokens[i].type == TOKEN_NBR || tokens[i].type == TOKEN_COMMA) {
-            // Si le token est un nombre, écrit son type suivi de son lexeme
+        // Ajouter un saut de ligne après chaque TOKEN_SEMICOLON
+        if (tokens[i].type == TOKEN_SEMICOLON) {
+            fprintf(file, "\n");
+        }
+        // Ne pas écrire le token COMMA
+        if (tokens[i].type == TOKEN_COMMA || tokens[i].type == TOKEN_LPAREN || tokens[i].type == TOKEN_RPAREN || 
+            tokens[i].type == TOKEN_SEMICOLON || tokens[i].type == TOKEN_EOF || tokens[i].type == TOKEN_LBRACKET || 
+            tokens[i].type == TOKEN_RBRACKET || tokens[i].type == TOKEN_LBRACE || tokens[i].type == TOKEN_RBRACE) {
+            continue; // Passer au token suivant
+        }
+
+        if (tokens[i].type == TOKEN_NBR) {
+            // Si le token est un nombre, écrit uniquement son lexeme
             fprintf(file, "%s ", tokens[i].lexeme);
         } else {
             // Sinon, écrit le nom lisible du type du token
             const char *token_name = token_type_to_string(tokens[i].type);
             fprintf(file, "%s ", token_name);
-        }
-
-        // Ajoute un saut de ligne après un TOKEN_SEMICOLON
-        if (tokens[i].type == TOKEN_SEMICOLON) {
-            fprintf(file, "\n");
         }
     }
 
