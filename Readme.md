@@ -83,8 +83,8 @@ Draw++ est une interface graphique interactive permettant d'interpréter des com
 - Permet à l'utilisateur de saisir des commandes de dessin dans un format structuré.
 - Exemples de commandes supportées :
   ```
-  drawcircle 50
-  drawgo 100 200
+  drawcircle(50);
+  drawgo(100,200);
   ```
 
 ### Menu interactif
