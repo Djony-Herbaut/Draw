@@ -53,6 +53,7 @@ typedef enum {
     TOKEN_DIV,                     // /
     TOKEN_POW,                     // ** (puissance en Python)
     TOKEN_QUOTE,                   // "
+    TOKEN_NEWLINE,                 // Saut de ligne
 
     // Symboles - Comparaison et Logique
     TOKEN_SUP,                     // >

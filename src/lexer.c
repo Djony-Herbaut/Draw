@@ -55,7 +55,7 @@ int tokenize(const char *source_code, Token *tokens) {
 
     while (*current_char && token_cmpt < MAX_TOKENS) {
         // Ignore les espaces et commentaires
-        skip_whitespace_and_comments(&current_char, &col);
+        skip_whitespace_and_comments(&current_char, &col, tokens, &token_cmpt, &line);
 
         if (*current_char == '\0') break;
 
@@ -301,26 +301,45 @@ TokenType is_symbol(char c) {
  * @param current_char Pointeur vers le caractère courant (mis à jour)
  * @param col Pointeur vers la colonne courante (mise à jour)
  */
-void skip_whitespace_and_comments(const char **current_char, int *col) {
+void skip_whitespace_and_comments(const char **current_char, int *col, Token *tokens, int *token_count, int *line) {
     while (**current_char) {
-        if (**current_char == ' ') {
+        if (**current_char == '\n') {
+            // Enregistre un token pour le saut de ligne
+            tokens[*token_count].type = TOKEN_NEWLINE;
+            tokens[*token_count].lexeme[0] = '\n';
+            tokens[*token_count].lexeme[1] = '\0';
+            tokens[*token_count].line = *line;
+            tokens[*token_count].col = *col;
+            (*token_count)++;
+            
             (*current_char)++;
-            (*col)++;
-        } else if (**current_char == '\t') {
+            (*line)++;
+            *col = 1; // Réinitialise la colonne
+        } else if (isspace(**current_char)) {
+            if (**current_char == '\t') {
+                *col += 4; // Considère une tabulation comme 4 espaces (optionnel)
+            } else {
+                (*col)++;
+            }
             (*current_char)++;
-            (*col) += 4;  // Un tab compte pour 4 espaces
-        } else if (**current_char == '\r') {
-            (*current_char)++;
-            (*col)++;
         } else if (**current_char == '/' && *(*current_char + 1) == '/') {
-            // Ignore les commentaires jusqu'à la fin de la ligne
+            // Ignore les commentaires sur une ligne
             while (**current_char && **current_char != '\n') {
                 (*current_char)++;
             }
-            if (**current_char == '\n') (*current_char)++;
-            (*col) = 1;
+        } else if (**current_char == '/' && *(*current_char + 1) == '*') {
+            // Ignore les commentaires multi-lignes
+            (*current_char) += 2; // Passe "/*"
+            while (**current_char && !(**current_char == '*' && *(*current_char + 1) == '/')) {
+                if (**current_char == '\n') {
+                    (*line)++;
+                    *col = 1;
+                }
+                (*current_char)++;
+            }
+            if (**current_char) (*current_char) += 2; // Passe "*/"
         } else {
-            break;
+            break; // Arrête si ce n'est ni un espace ni un commentaire
         }
     }
 }

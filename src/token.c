@@ -114,6 +114,7 @@ const char *token_type_to_string(TokenType type) {
         case TOKEN_VARSTR: return "TOKEN_VARSTR";
         case TOKEN_STR: return "TOKEN_STR";
         case TOKEN_VARIABLE: return "TOKEN_VARIABLE";
+        case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
         case TOKEN_EOF: return "TOKEN_EOF";
         default: return "TOKEN_UNKNOWN";
     }

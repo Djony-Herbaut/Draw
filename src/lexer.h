@@ -7,7 +7,7 @@
 
 // Prototypes pour rendre is_keyword et is_symbol disponibles dans ide.c
 int tokenize(const char *source_code, Token *tokens);
-void skip_whitespace_and_comments(const char **current_char, int *col);
+void skip_whitespace_and_comments(const char **current_char, int *col, Token *tokens, int *token_count, int *line);
 TokenType is_keyword(const char *word);
 TokenType is_symbol(char c);
 TokenType is_number(const char *word);
