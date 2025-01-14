@@ -179,8 +179,7 @@ L'IDE utilise plusieurs bibliothèques externes :
 
 Utilisez la commande suivante pour compiler l'IDE :
 ```bash
-gcc -o ide ide.c read_tokens.c lexer.c token.c parser.c \
-    `pkg-config --cflags --libs gtk+-3.0` -I/usr/include/python3.12 -lpython3.12 -lpthread -Wall -Wextra -g
+  gcc -o ide ide.c read_tokens.c lexer.c token.c parser.h `pkg-config --cflags --libs gtk+-3.0` -I/usr/include/python3.12 -lpython3.12
 ```
 
 ---
@@ -193,20 +192,21 @@ gcc -o ide ide.c read_tokens.c lexer.c token.c parser.c \
    ```
 
 2. **Cliquez sur "Exécuter Lexer" :**
-   - La console affiche les tokens générés :
+   - Le terminal affiche les tokens générés :
      ```
-  Token 0 : Type = 13, Lexeme = "drawcircle"
-  Token 1 : Type = 28, Lexeme = "("
-  Token 2 : Type = 52, Lexeme = "50"
-  Token 3 : Type = 29, Lexeme = ")"
-  Token 4 : Type = 35, Lexeme = ";"
-  Token 5 : Type = 58, Lexeme = "EOF"
+      === Sortie du lexer ===
+      Token 0 : Type = 13, Lexeme = "drawcircle", Ligne = 1, Colonne = 1
+      Token 1 : Type = 28, Lexeme = "(", Ligne = 1, Colonne = 11
+      Token 2 : Type = 53, Lexeme = "50", Ligne = 1, Colonne = 12
+      Token 3 : Type = 29, Lexeme = ")", Ligne = 1, Colonne = 14
+      Token 4 : Type = 35, Lexeme = ";", Ligne = 1, Colonne = 15
+      Token 5 : Type = 59, Lexeme = "EOF", Ligne = 1, Colonne = 16
      ```
 
 3. **Cliquez sur "Exécuter Parser" :**
    - Si valide, la console indique :
      ```
-     Syntaxe valide : lancement du dessin...
+     Lexage réussi : liste des tokens générée.
      ```
    - Un canvas s'ouvre et affiche les formes demandées.
 
