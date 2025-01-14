@@ -353,19 +353,25 @@ void init_syntax_highlighting(GtkTextBuffer *buffer) {
 
 // Function to add errors to the console/log
 void log_to_console(const char *message) {
-    if (console_log != NULL) {
+    if (console_log != NULL && GTK_IS_TEXT_VIEW(console_log)) {
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(console_log));
-        GtkTextIter end;
-        gtk_text_buffer_get_end_iter(buffer, &end);
+        if (buffer != NULL) {
+            GtkTextIter end;
+            gtk_text_buffer_get_end_iter(buffer, &end);
 
-        // Validate that the message is in UTF-8 before insertion
-        if (g_utf8_validate(message, -1, NULL)) {
-            gtk_text_buffer_insert(buffer, &end, message, -1);
-            gtk_text_buffer_insert(buffer, &end, "\n", -1);
+            // Validate that the message is in UTF-8 before insertion
+            if (g_utf8_validate(message, -1, NULL)) {
+                gtk_text_buffer_insert(buffer, &end, message, -1);
+                gtk_text_buffer_insert(buffer, &end, "\n", -1);
+            } else {
+                // If the string is not valid, log a generic error
+                gtk_text_buffer_insert(buffer, &end, "[Erreur UTF-8 détectée]\n", -1);
+            }
         } else {
-            // If the string is not valid, log a generic error
-            gtk_text_buffer_insert(buffer, &end, "[Erreur UTF-8 détectée]\n", -1);
+            g_warning("Impossible de récupérer le GtkTextBuffer associé à console_log.");
         }
+    } else {
+        g_warning("console_log est NULL ou n'est pas un GtkTextView.");
     }
 }
 
