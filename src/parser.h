@@ -900,7 +900,9 @@ void write_tokens_to_file(const Token tokens[], int token_count, const char *fil
         // Ne pas écrire le token COMMA
         if (tokens[i].type == TOKEN_COMMA || tokens[i].type == TOKEN_LPAREN || tokens[i].type == TOKEN_RPAREN || 
             tokens[i].type == TOKEN_SEMICOLON || tokens[i].type == TOKEN_EOF || tokens[i].type == TOKEN_LBRACKET || 
-            tokens[i].type == TOKEN_RBRACKET || tokens[i].type == TOKEN_LBRACE || tokens[i].type == TOKEN_RBRACE || tokens[i].type == TOKEN_NEWLINE) {
+            tokens[i].type == TOKEN_RBRACKET || tokens[i].type == TOKEN_LBRACE || tokens[i].type == TOKEN_RBRACE || 
+            tokens[i].type == TOKEN_NEWLINE)
+            {
             continue; // Passer au token suivant
         }
 

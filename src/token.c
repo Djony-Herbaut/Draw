@@ -67,6 +67,9 @@ TokenDictionnary symbols[] = {
     {TOKEN_AND, "and"},           // ET logique (C)
     {TOKEN_OR, "or"},            // OU logique (C)
     {TOKEN_NOT, "not"},            // Négation logique (C)
+    {TOKEN_D_IF, "if"},
+    {TOKEN_D_ELSE, "else"},
+    {TOKEN_D_FOR, "for"}
 };
 
 const int symbolsDictSize = sizeof(symbols) / sizeof(symbols[0]);
