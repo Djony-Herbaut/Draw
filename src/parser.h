@@ -45,6 +45,14 @@ bool is_draw_stmt_noParam(TokenType type) {
     type == TOKEN_DRAWUPDATE ;
 }
 
+//Procédure qui skip les retours a la ligne
+void skip_newlines(Token *tokens, int *index) {
+    while (tokens[*index].type == TOKEN_NEWLINE) {
+        (*index)++;
+    }
+}
+
+
 //Construction d'un noeud a partir d'un token
 ASTNode *create_node(const char *type, Token token) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
@@ -163,6 +171,12 @@ ASTNode *parse_block(Token *tokens, int *index) {
     ASTNode *block_node = create_node("block", tokens[*index]);
     (*index)++;
 
+    Token current = tokens[*index];
+    while (current.type == TOKEN_NEWLINE) {
+        (*index)++;
+        current = tokens[*index];
+    }
+
     while (tokens[*index].type != TOKEN_RBRACE) {
         if (tokens[*index].type == TOKEN_EOF) {
             log_to_console("Erreur syntaxique : '}' manquant avant la fin du fichier");
@@ -219,13 +233,15 @@ ASTNode *parse_draw_stmt(Token *tokens, int *index) {
             // Vérification de la parenthèse droite
             if (tokens[*index].type == TOKEN_RPAREN) {
                 (*index)++;
-                
-                
-                // Vérification du point-virgule
 
                 // Vérification du point-virgule
                 if (tokens[*index].type == TOKEN_SEMICOLON) {
                     (*index)++;
+
+                    while (tokens[*index].type == TOKEN_NEWLINE) {
+                        (*index)++;
+                    }
+
                     return node;
                 } else {
                     char error_message[256];
@@ -305,46 +321,43 @@ ASTNode *parse_condition(Token *tokens, int *index) {
         add_child(node, create_node("if", current));
         (*index)++;
         
-        
-        // Verification de la parenthese ouvrante
 
         // Verification de la parenthese ouvrante
         if (tokens[*index].type == TOKEN_LPAREN) {
             (*index)++;
             
-            
-            // Parsing de l'expression conditionnelle
-
             // Parsing de l'expression conditionnelle
             ASTNode *cond_expr = parse_condition_expr(tokens, index);
             if (cond_expr != NULL) {
                 add_child(node, cond_expr);
                 
-                
-                // Verification de la parenthese fermante
 
                 // Verification de la parenthese fermante
                 if (tokens[*index].type == TOKEN_RPAREN) {
                     (*index)++;
-                    
-                    
-                    // Parsing du bloc
 
+                    current = tokens[*index];
+                    if (current.type == TOKEN_NEWLINE) {
+                        (*index)++;
+                        current = tokens[*index];
+                    }
+                    
                     // Parsing du bloc
                     ASTNode *block = parse_block(tokens, index);
                     if (block != NULL) {
                         add_child(node, block);
                         
-                        
-                        // Verification du token "else"
 
                         // Verification du token "else"
                         if (tokens[*index].type == TOKEN_D_ELSE) {
                             (*index)++;
-                            
-                            
-                            // Parsing du bloc "else"
 
+                            current = tokens[*index];
+                            if (current.type == TOKEN_NEWLINE) {
+                                (*index)++;
+                                current = tokens[*index];
+                            }
+                            
                             // Parsing du bloc "else"
                             ASTNode *else_block = parse_block(tokens, index);
                             if (else_block != NULL) {
@@ -388,9 +401,10 @@ ASTNode *parse_condition(Token *tokens, int *index) {
 ASTNode *parse_setcolor_stmt(Token *tokens, int *index) {
     Token current = tokens[*index];
 
-    if (current.type != TOKEN_DRAWCURSOR_COLOR) {
+    // Vérification de TOKEN_DRAWSETCOLOR
+    if (current.type != TOKEN_DRAWSETCOLOR) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu 'TOKEN_DRAWCURSOR_COLOR' ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu 'TOKEN_DRAWSETCOLOR' ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
@@ -398,34 +412,55 @@ ASTNode *parse_setcolor_stmt(Token *tokens, int *index) {
     ASTNode *node = create_node("setcolor_stmt", current);
     (*index)++;
 
+    // Vérification de TOKEN_LPAREN
     current = tokens[*index];
-    if (current.type != TOKEN_ASSIGN) {
+    if (current.type != TOKEN_LPAREN) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu '=' apres 'TOKEN_DRAWCURSOR_COLOR' ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu '(' apres 'TOKEN_DRAWSETCOLOR' ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
-    add_child(node, create_node("assign", current));
+    add_child(node, create_node("lparen", current));
     (*index)++;
 
+    // Vérification de string_literal
     current = tokens[*index];
     if (current.type != TOKEN_STR) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu une chaîne de caracteres ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu une chaîne de caractères ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
     add_child(node, create_node("color_value", current));
     (*index)++;
 
+    // Vérification de TOKEN_RPAREN
     current = tokens[*index];
-    if (current.type != TOKEN_SEMICOLON) {
+    if (current.type != TOKEN_RPAREN) {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "Erreur: Attendu ';' apres la valeur ligne %d, colonne %d", current.line, current.col);
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu ')' apres la chaîne de caractères ligne %d, colonne %d", current.line, current.col);
         log_to_console(error_message);
         return NULL;
     }
+    add_child(node, create_node("rparen", current));
     (*index)++;
+
+    // Vérification de TOKEN_SEMICOLON
+    current = tokens[*index];
+    if (current.type != TOKEN_SEMICOLON) {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "Erreur: Attendu ';' apres ')' ligne %d, colonne %d", current.line, current.col);
+        log_to_console(error_message);
+        return NULL;
+    }
+    add_child(node, create_node("semicolon", current));
+    (*index)++;
+
+    current = tokens[*index];
+    while (current.type == TOKEN_NEWLINE) {
+        (*index)++;
+        current = tokens[*index];
+    }
 
     return node;
 }
@@ -496,6 +531,12 @@ ASTNode *parse_move_stmt(Token *tokens, int *index) {
         return NULL;
     }
     (*index)++;
+
+    current = tokens[*index];
+    while (current.type == TOKEN_NEWLINE) {
+        (*index)++;
+        current = tokens[*index];
+    }
 
     return node;
 }
@@ -859,7 +900,7 @@ void write_tokens_to_file(const Token tokens[], int token_count, const char *fil
         // Ne pas écrire le token COMMA
         if (tokens[i].type == TOKEN_COMMA || tokens[i].type == TOKEN_LPAREN || tokens[i].type == TOKEN_RPAREN || 
             tokens[i].type == TOKEN_SEMICOLON || tokens[i].type == TOKEN_EOF || tokens[i].type == TOKEN_LBRACKET || 
-            tokens[i].type == TOKEN_RBRACKET || tokens[i].type == TOKEN_LBRACE || tokens[i].type == TOKEN_RBRACE) {
+            tokens[i].type == TOKEN_RBRACKET || tokens[i].type == TOKEN_LBRACE || tokens[i].type == TOKEN_RBRACE || tokens[i].type == TOKEN_NEWLINE) {
             continue; // Passer au token suivant
         }
 
